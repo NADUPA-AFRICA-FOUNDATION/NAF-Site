@@ -13,6 +13,7 @@ export function Footer() {
     { href: "/resources", label: "Resources" },
     { href: "/donate", label: "Donate" },
     { href: "/contact", label: "Contact" },
+    { href: "/terms", label: "Terms & Conditions" },
   ]
 
   const programLinks = [
