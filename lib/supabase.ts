@@ -14,21 +14,36 @@ if (!supabaseAnonKey) {
   console.warn("Missing NEXT_PUBLIC_SUPABASE_ANON_KEY environment variable")
 }
 
-// Client-side client for public operations
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    autoRefreshToken: true,
-    persistSession: true,
-  },
-})
+// Singleton instances
+let supabaseInstance: ReturnType<typeof createClient> | null = null
+let supabaseAdminInstance: ReturnType<typeof createClient> | null = null
 
-// Server-side client with service role key for admin operations
-export const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey || supabaseAnonKey, {
-  auth: {
-    autoRefreshToken: false,
-    persistSession: false,
-  },
-})
+// Client-side client for public operations (singleton)
+export const supabase = (() => {
+  if (!supabaseInstance) {
+    supabaseInstance = createClient(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        autoRefreshToken: true,
+        persistSession: true,
+        storage: typeof window !== "undefined" ? window.localStorage : undefined,
+      },
+    })
+  }
+  return supabaseInstance
+})()
+
+// Server-side client with service role key for admin operations (singleton)
+export const supabaseAdmin = (() => {
+  if (!supabaseAdminInstance) {
+    supabaseAdminInstance = createClient(supabaseUrl, supabaseServiceKey || supabaseAnonKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false,
+      },
+    })
+  }
+  return supabaseAdminInstance
+})()
 
 // Check if Supabase is configured
 export function isSupabaseConfigured(): boolean {

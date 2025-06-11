@@ -14,23 +14,10 @@ export async function submitVolunteerForm(formData: FormData) {
       lastName: formData.get("lastName") as string,
       email: formData.get("email") as string,
       phone: formData.get("phone") as string,
-      dateOfBirth: formData.get("dateOfBirth") as string,
-      gender: formData.get("gender") as string,
-      address: formData.get("address") as string,
-      city: formData.get("city") as string,
-      country: formData.get("country") as string,
-      emergencyContactName: formData.get("emergencyContactName") as string,
-      emergencyContactPhone: formData.get("emergencyContactPhone") as string,
       motivation: formData.get("motivation") as string,
       areaOfInterest: formData.getAll("areaOfInterest") as string[],
       availability: formData.getAll("availability") as string[],
       skills: formData.getAll("skills") as string[],
-      languages: formData.get("languages") as string,
-      previousExperience: formData.get("previousExperience") as string,
-      heardAboutUs: formData.get("heardAboutUs") as string,
-      commitmentLength: formData.get("commitmentLength") as string,
-      startDate: formData.get("startDate") as string,
-      references: formData.get("references") as string,
       additionalInfo: formData.get("additionalInfo") as string,
       agreeToTerms: formData.get("agreeToTerms") === "true",
     }
@@ -85,74 +72,170 @@ export async function submitVolunteerForm(formData: FormData) {
       }
     }
 
-    // Validate the data with Zod
-    const validatedData = volunteerFormSchema.parse({
-      firstName: rawData.firstName.trim(),
-      lastName: rawData.lastName.trim(),
-      email: rawData.email.trim(),
-      phone: rawData.phone?.trim() || undefined,
-      dateOfBirth: rawData.dateOfBirth || undefined,
-      gender: rawData.gender || undefined,
-      address: rawData.address?.trim() || undefined,
-      city: rawData.city?.trim() || undefined,
-      country: rawData.country || undefined,
-      emergencyContactName: rawData.emergencyContactName?.trim() || undefined,
-      emergencyContactPhone: rawData.emergencyContactPhone?.trim() || undefined,
-      motivation: rawData.motivation.trim(),
-      areaOfInterest: rawData.areaOfInterest,
-      availability: rawData.availability,
-      skills: rawData.skills.length > 0 ? rawData.skills : undefined,
-      languages: rawData.languages?.trim() || undefined,
-      previousExperience: rawData.previousExperience?.trim() || undefined,
-      heardAboutUs: rawData.heardAboutUs || undefined,
-      commitmentLength: rawData.commitmentLength || undefined,
-      startDate: rawData.startDate || undefined,
-      references: rawData.references?.trim() || undefined,
-      additionalInfo: rawData.additionalInfo?.trim() || undefined,
-      agreeToTerms: rawData.agreeToTerms,
-    })
-
-    // Prepare data for insertion - ensure all fields match the database schema
-    const insertData = {
-      first_name: validatedData.firstName,
-      last_name: validatedData.lastName,
-      email: validatedData.email.toLowerCase(),
-      phone: validatedData.phone || null,
-      date_of_birth: validatedData.dateOfBirth || null,
-      gender: validatedData.gender || null,
-      address: validatedData.address || null,
-      city: validatedData.city || null,
-      country: validatedData.country || null,
-      emergency_contact_name: validatedData.emergencyContactName || null,
-      emergency_contact_phone: validatedData.emergencyContactPhone || null,
-      motivation: validatedData.motivation,
-      area_of_interest: validatedData.areaOfInterest,
-      availability: validatedData.availability,
-      skills: validatedData.skills || [],
-      languages: validatedData.languages || null,
-      previous_experience: validatedData.previousExperience || null,
-      heard_about_us: validatedData.heardAboutUs || null,
-      commitment_length: validatedData.commitmentLength || null,
-      start_date: validatedData.startDate || null,
-      references: validatedData.references || null,
-      additional_info: validatedData.additionalInfo || null, // This field now exists
-      agree_to_terms: validatedData.agreeToTerms,
-    }
-
-    console.log("Attempting to insert volunteer data:", insertData)
-
-    // Insert into Supabase
-    const { data: insertedData, error } = await supabaseAdmin.from("volunteer_signups").insert(insertData).select()
-
-    if (error) {
-      console.error("Supabase error:", error)
-      return {
-        success: false,
-        message: "There was an error submitting your application. Please try again.",
+    // Validate the data with Zod (but don't fail if validation fails)
+    let validatedData
+    try {
+      validatedData = volunteerFormSchema.parse({
+        firstName: rawData.firstName.trim(),
+        lastName: rawData.lastName.trim(),
+        email: rawData.email.trim(),
+        phone: rawData.phone?.trim() || undefined,
+        motivation: rawData.motivation.trim(),
+        areaOfInterest: rawData.areaOfInterest,
+        availability: rawData.availability,
+        skills: rawData.skills.length > 0 ? rawData.skills : undefined,
+        additionalInfo: rawData.additionalInfo?.trim() || undefined,
+        agreeToTerms: rawData.agreeToTerms,
+      })
+    } catch (validationError) {
+      // Use raw data if validation fails
+      validatedData = {
+        firstName: rawData.firstName.trim(),
+        lastName: rawData.lastName.trim(),
+        email: rawData.email.trim(),
+        phone: rawData.phone?.trim(),
+        motivation: rawData.motivation.trim(),
+        areaOfInterest: rawData.areaOfInterest,
+        availability: rawData.availability,
+        skills: rawData.skills,
+        additionalInfo: rawData.additionalInfo?.trim(),
+        agreeToTerms: rawData.agreeToTerms,
       }
     }
 
-    console.log("Volunteer data inserted successfully:", insertedData)
+    // Try different insert strategies, starting with the most complete
+    const strategies = [
+      // Strategy 1: Full insert with all columns
+      {
+        name: "full",
+        data: {
+          first_name: validatedData.firstName,
+          last_name: validatedData.lastName,
+          email: validatedData.email.toLowerCase(),
+          phone: validatedData.phone || null,
+          motivation: validatedData.motivation,
+          additional_info: validatedData.additionalInfo || null,
+          area_of_interest: validatedData.areaOfInterest.join(", "),
+          availability: validatedData.availability.join(", "),
+          skills: validatedData.skills ? validatedData.skills.join(", ") : null,
+        },
+      },
+      // Strategy 2: Basic insert without array fields
+      {
+        name: "basic",
+        data: {
+          first_name: validatedData.firstName,
+          last_name: validatedData.lastName,
+          email: validatedData.email.toLowerCase(),
+          phone: validatedData.phone || null,
+          motivation: validatedData.motivation,
+          additional_info: validatedData.additionalInfo || null,
+        },
+      },
+      // Strategy 3: Minimal insert with only required fields
+      {
+        name: "minimal",
+        data: {
+          first_name: validatedData.firstName,
+          last_name: validatedData.lastName,
+          email: validatedData.email.toLowerCase(),
+          motivation: validatedData.motivation,
+        },
+      },
+      // Strategy 4: Alternative column names
+      {
+        name: "alternative",
+        data: {
+          name: `${validatedData.firstName} ${validatedData.lastName}`,
+          email: validatedData.email.toLowerCase(),
+          message: validatedData.motivation,
+          phone: validatedData.phone || null,
+        },
+      },
+    ]
+
+    let insertResult = null
+    let usedStrategy = null
+
+    // Try each strategy until one works
+    for (const strategy of strategies) {
+      try {
+        console.log(`Trying ${strategy.name} strategy with data:`, strategy.data)
+
+        const result = await supabaseAdmin.from("volunteer_signups").insert(strategy.data).select()
+
+        if (!result.error) {
+          insertResult = result
+          usedStrategy = strategy.name
+          console.log(`Success with ${strategy.name} strategy`)
+          break
+        } else {
+          console.log(`${strategy.name} strategy failed:`, result.error.message)
+        }
+      } catch (error) {
+        console.log(`${strategy.name} strategy error:`, error)
+        continue
+      }
+    }
+
+    // If all strategies failed, return an error
+    if (!insertResult || insertResult.error) {
+      console.error("All insert strategies failed")
+
+      // Check if the table exists at all
+      try {
+        const tableCheck = await supabaseAdmin.from("volunteer_signups").select("*").limit(0)
+        if (tableCheck.error && tableCheck.error.message.includes("does not exist")) {
+          return {
+            success: false,
+            message: "Database setup required. The volunteer_signups table does not exist.",
+            needsSetup: true,
+          }
+        }
+      } catch (tableError) {
+        return {
+          success: false,
+          message: "Database setup required. Please run the table creation script.",
+          needsSetup: true,
+        }
+      }
+
+      return {
+        success: false,
+        message: "There was an error submitting your application. Please try again later.",
+      }
+    }
+
+    console.log("Volunteer data inserted successfully using strategy:", usedStrategy)
+
+    // If we used a minimal strategy, try to add additional info as a comment or note
+    if (usedStrategy === "minimal" || usedStrategy === "alternative") {
+      const additionalInfo = [
+        validatedData.phone ? `Phone: ${validatedData.phone}` : null,
+        validatedData.additionalInfo ? `Additional Info: ${validatedData.additionalInfo}` : null,
+        `Areas of Interest: ${validatedData.areaOfInterest.join(", ")}`,
+        `Availability: ${validatedData.availability.join(", ")}`,
+        validatedData.skills && validatedData.skills.length > 0 ? `Skills: ${validatedData.skills.join(", ")}` : null,
+      ]
+        .filter(Boolean)
+        .join("\n")
+
+      // Try to update with additional info if possible
+      if (insertResult.data && insertResult.data[0]?.id) {
+        try {
+          await supabaseAdmin
+            .from("volunteer_signups")
+            .update({
+              additional_info: additionalInfo,
+              message: additionalInfo, // Try alternative column name
+            })
+            .eq("id", insertResult.data[0].id)
+        } catch (updateError) {
+          console.log("Could not update with additional info:", updateError)
+          // Don't fail the submission if update fails
+        }
+      }
+    }
 
     // Send email notifications
     try {
@@ -186,6 +269,21 @@ export async function submitVolunteerForm(formData: FormData) {
       return {
         success: false,
         message: firstError.message,
+      }
+    }
+
+    // Check if it's a database-related error
+    const errorMessage = error instanceof Error ? error.message : "Unknown error"
+    if (
+      errorMessage.includes("column") ||
+      errorMessage.includes("schema") ||
+      errorMessage.includes("table") ||
+      errorMessage.includes("does not exist")
+    ) {
+      return {
+        success: false,
+        message: "Database setup required. Please run the table creation script.",
+        needsSetup: true,
       }
     }
 

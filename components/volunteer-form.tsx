@@ -9,11 +9,9 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { toast } from "@/components/ui/use-toast"
 import { Toaster } from "@/components/ui/toaster"
-import { CheckCircle2, Loader2, AlertCircle } from "lucide-react"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Label } from "@/components/ui/label"
+import { CheckCircle2, Loader2, AlertCircle, Database, ExternalLink, Copy } from "lucide-react"
 import { submitVolunteerForm } from "@/app/actions/volunteer"
+import { Card, CardContent } from "@/components/ui/card"
 
 export function VolunteerForm() {
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -23,6 +21,7 @@ export function VolunteerForm() {
   const [selectedSkills, setSelectedSkills] = useState<string[]>([])
   const [agreeToTerms, setAgreeToTerms] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [needsSetup, setNeedsSetup] = useState(false)
 
   const areasOfInterest = [
     { id: "education", label: "Education Support" },
@@ -64,6 +63,7 @@ export function VolunteerForm() {
     event.preventDefault()
     setIsSubmitting(true)
     setError(null)
+    setNeedsSetup(false)
 
     const formData = new FormData(event.currentTarget)
 
@@ -91,6 +91,11 @@ export function VolunteerForm() {
         setSelectedSkills([])
         setAgreeToTerms(false)
       } else {
+        // Check if it needs database setup
+        if ((result as any).needsSetup) {
+          setNeedsSetup(true)
+        }
+
         setError(result.message)
         toast({
           title: "Error",
@@ -101,6 +106,17 @@ export function VolunteerForm() {
     } catch (error) {
       console.error("Form submission error:", error)
       const errorMessage = error instanceof Error ? error.message : "Something went wrong. Please try again."
+
+      // Check if it's a database schema error
+      if (
+        errorMessage.includes("column") ||
+        errorMessage.includes("schema") ||
+        errorMessage.includes("table") ||
+        errorMessage.includes("Could not find")
+      ) {
+        setNeedsSetup(true)
+      }
+
       setError(errorMessage)
       toast({
         title: "Error",
@@ -120,6 +136,73 @@ export function VolunteerForm() {
     } else if (type === "skills") {
       setSelectedSkills((prev) => (checked ? [...prev, value] : prev.filter((item) => item !== value)))
     }
+  }
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text)
+    toast({
+      title: "Copied",
+      description: "Script name copied to clipboard",
+    })
+  }
+
+  if (needsSetup) {
+    return (
+      <Card className="border-red-200 bg-red-50">
+        <CardContent className="p-6">
+          <div className="flex flex-col items-center gap-4 text-center">
+            <Database className="w-12 h-12 text-red-600" />
+            <h3 className="text-xl font-bold text-red-800">Database Setup Required</h3>
+            <p className="text-red-700 mb-4">
+              The volunteer form requires database setup. The volunteer_signups table is missing or doesn't have the
+              required columns.
+            </p>
+            <div className="bg-white p-4 rounded-lg border border-red-200 text-left w-full">
+              <h4 className="font-semibold text-red-800 mb-2">Required Action:</h4>
+              <div className="space-y-3 text-red-700">
+                <p className="mb-2">Run this SQL script in your Supabase SQL editor:</p>
+                <div className="bg-red-50 p-3 rounded border border-red-200 flex items-center justify-between">
+                  <code className="font-mono text-sm">scripts/09-simple-volunteer-table.sql</code>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => copyToClipboard("scripts/09-simple-volunteer-table.sql")}
+                    className="h-6 w-6 p-0"
+                  >
+                    <Copy className="w-3 h-3" />
+                  </Button>
+                </div>
+                <div className="text-sm space-y-1">
+                  <p>
+                    <strong>Steps:</strong>
+                  </p>
+                  <ol className="list-decimal list-inside space-y-1 ml-2">
+                    <li>Open your Supabase dashboard</li>
+                    <li>Go to the SQL Editor</li>
+                    <li>Copy the content from scripts/09-simple-volunteer-table.sql</li>
+                    <li>Paste and run the script</li>
+                    <li>Come back and try submitting the form again</li>
+                  </ol>
+                </div>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <Button onClick={() => setNeedsSetup(false)} className="bg-red-600 hover:bg-red-700 text-white">
+                Try Again After Setup
+              </Button>
+              <Button
+                variant="outline"
+                className="border-red-600 text-red-600 hover:bg-red-50"
+                onClick={() => window.open("https://supabase.com/dashboard", "_blank")}
+              >
+                <ExternalLink className="w-4 h-4 mr-2" />
+                Open Supabase
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    )
   }
 
   if (isSubmitted) {
@@ -150,7 +233,7 @@ export function VolunteerForm() {
   return (
     <>
       <form onSubmit={handleSubmit} className="space-y-8">
-        {error && (
+        {error && !needsSetup && (
           <div className="bg-red-50 border border-red-200 rounded-md p-4 flex items-start gap-3">
             <AlertCircle className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" />
             <div>
@@ -195,89 +278,6 @@ export function VolunteerForm() {
                 Phone Number
               </label>
               <Input id="phone" name="phone" placeholder="+254 796093465" />
-            </div>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-6">
-            <div>
-              <label htmlFor="dateOfBirth" className="block text-sm font-medium text-stone-700 mb-2">
-                Date of Birth
-              </label>
-              <Input id="dateOfBirth" name="dateOfBirth" type="date" />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-stone-700 mb-2">Gender</label>
-              <RadioGroup name="gender" className="flex space-x-4">
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="female" id="female" />
-                  <Label htmlFor="female">Female</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="male" id="male" />
-                  <Label htmlFor="male">Male</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="other" id="other" />
-                  <Label htmlFor="other">Other</Label>
-                </div>
-              </RadioGroup>
-            </div>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-6">
-            <div className="md:col-span-2">
-              <label htmlFor="address" className="block text-sm font-medium text-stone-700 mb-2">
-                Address
-              </label>
-              <Input id="address" name="address" placeholder="Street address" />
-            </div>
-
-            <div>
-              <label htmlFor="city" className="block text-sm font-medium text-stone-700 mb-2">
-                City
-              </label>
-              <Input id="city" name="city" placeholder="City" />
-            </div>
-          </div>
-
-          <div>
-            <label htmlFor="country" className="block text-sm font-medium text-stone-700 mb-2">
-              Country
-            </label>
-            <Select name="country">
-              <SelectTrigger>
-                <SelectValue placeholder="Select your country" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="kenya">Kenya</SelectItem>
-                <SelectItem value="uganda">Uganda</SelectItem>
-                <SelectItem value="tanzania">Tanzania</SelectItem>
-                <SelectItem value="ethiopia">Ethiopia</SelectItem>
-                <SelectItem value="rwanda">Rwanda</SelectItem>
-                <SelectItem value="other">Other</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-
-        {/* Emergency Contact */}
-        <div className="space-y-6">
-          <h3 className="text-xl font-semibold text-stone-800 border-b border-stone-200 pb-2">Emergency Contact</h3>
-
-          <div className="grid md:grid-cols-2 gap-6">
-            <div>
-              <label htmlFor="emergencyContactName" className="block text-sm font-medium text-stone-700 mb-2">
-                Emergency Contact Name
-              </label>
-              <Input id="emergencyContactName" name="emergencyContactName" placeholder="Full name" />
-            </div>
-
-            <div>
-              <label htmlFor="emergencyContactPhone" className="block text-sm font-medium text-stone-700 mb-2">
-                Emergency Contact Phone
-              </label>
-              <Input id="emergencyContactPhone" name="emergencyContactPhone" placeholder="Phone number" />
             </div>
           </div>
         </div>
@@ -381,83 +381,6 @@ export function VolunteerForm() {
                 ))}
               </div>
             </div>
-          </div>
-
-          <div>
-            <label htmlFor="languages" className="block text-sm font-medium text-stone-700 mb-2">
-              Languages Spoken
-            </label>
-            <Input id="languages" name="languages" placeholder="E.g., English, Swahili, etc." />
-          </div>
-
-          <div>
-            <label htmlFor="previousExperience" className="block text-sm font-medium text-stone-700 mb-2">
-              Previous Volunteer Experience
-            </label>
-            <Textarea
-              id="previousExperience"
-              name="previousExperience"
-              placeholder="Please describe any previous volunteer experience you have..."
-              className="min-h-24"
-            />
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-6">
-            <div>
-              <label htmlFor="commitmentLength" className="block text-sm font-medium text-stone-700 mb-2">
-                How long can you commit to volunteering?
-              </label>
-              <Select name="commitmentLength">
-                <SelectTrigger>
-                  <SelectValue placeholder="Select commitment period" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="1-3months">1-3 months</SelectItem>
-                  <SelectItem value="3-6months">3-6 months</SelectItem>
-                  <SelectItem value="6-12months">6-12 months</SelectItem>
-                  <SelectItem value="1year+">More than 1 year</SelectItem>
-                  <SelectItem value="ongoing">Ongoing/No specific timeframe</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <label htmlFor="startDate" className="block text-sm font-medium text-stone-700 mb-2">
-                When can you start?
-              </label>
-              <Input id="startDate" name="startDate" type="date" />
-            </div>
-          </div>
-
-          <div>
-            <label htmlFor="heardAboutUs" className="block text-sm font-medium text-stone-700 mb-2">
-              How did you hear about us?
-            </label>
-            <Select name="heardAboutUs">
-              <SelectTrigger>
-                <SelectValue placeholder="Select an option" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="website">Website</SelectItem>
-                <SelectItem value="socialMedia">Social Media</SelectItem>
-                <SelectItem value="friend">Friend/Family</SelectItem>
-                <SelectItem value="event">Event</SelectItem>
-                <SelectItem value="newspaper">Newspaper/Magazine</SelectItem>
-                <SelectItem value="other">Other</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div>
-            <label htmlFor="references" className="block text-sm font-medium text-stone-700 mb-2">
-              References
-            </label>
-            <Textarea
-              id="references"
-              name="references"
-              placeholder="Please provide names and contact information for 1-2 references..."
-              className="min-h-24"
-            />
           </div>
 
           <div>
