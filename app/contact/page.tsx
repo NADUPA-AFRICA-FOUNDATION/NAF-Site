@@ -82,19 +82,13 @@ export default function ContactPage() {
                 <CardContent>
                   <div className="space-y-2">
                     <p className="text-stone-600">
-                      <strong>General Inquiries:</strong>
+                      <strong>Contact Email:</strong>
                       <br />
                       info@nadupaafricafoundation.org
                     </p>
-                    <p className="text-stone-600">
-                      <strong>Partnerships:</strong>
-                      <br />
-                      partnerships@nadupaafricafoundation.org
-                    </p>
-                    <p className="text-stone-600">
-                      <strong>Volunteer Applications:</strong>
-                      <br />
-                      volunteer@nadupaafricafoundation.org
+                    <p className="text-stone-500 text-sm mt-3">
+                      For all inquiries including general questions, partnerships, volunteer applications, and program
+                      information.
                     </p>
                   </div>
                 </CardContent>
@@ -162,9 +156,6 @@ export default function ContactPage() {
                     </p>
                     <p>
                       <strong>Country of Registration:</strong> Kenya
-                    </p>
-                    <p>
-                      <strong>Year Established:</strong> [Year]
                     </p>
                   </div>
                 </CardContent>
