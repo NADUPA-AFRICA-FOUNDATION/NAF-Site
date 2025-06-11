@@ -68,31 +68,24 @@ export function Footer() {
             </ul>
           </div>
 
-          {/* Contact Info */}
-          <div>
-            <h3 className="font-semibold text-lg mb-4 border-b border-stone-700 pb-2">Contact Info</h3>
-            <div className="space-y-3 text-stone-300">
-              <div className="flex items-start gap-2">
-                <MapPin className="w-4 h-4 mt-1 text-emerald-400" />
-                <span className="text-sm">Kajiado-West, Kajiado County, Kenya</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Mail className="w-4 h-4 text-emerald-400" />
-                
-              </div>
-    nadupaafricafoundation@gmail.comitems-center gap-2">
-                <Phone className="w-4 h-4 text-emerald-400" />
-                <span className="text-sm">+254 XXX XXX XXX</span>
-             "absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
-              <div className="w-2 h-2 bg-amber-500 rounded-full"></div>
-              <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
-              <div className="w-2 h-2 bg-amber-500 rounded-full"></div>
-              <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
-            </div>
-          </div>
-        </div>
+       {/* Contact Info */}
+<div>
+  <h3 className="font-semibold text-lg mb-4 border-b border-stone-700 pb-2">Contact Info</h3>
+  <div className="space-y-3 text-stone-300">
+    <div className="flex items-start gap-2">
+      <MapPin className="w-4 h-4 mt-1 text-emerald-400" />
+      <span className="text-sm">Kajiado-West, Kajiado County, Kenya</span>
+    </div>
+    <div className="flex items-center gap-2">
+      <Mail className="w-4 h-4 text-emerald-400" />
+      <span className="text-sm">info@nadupaafricafoundation.org</span>
+    </div>
+    <div className="flex items-center gap-2">
+      <Phone className="w-4 h-4 text-emerald-400" />
+      <span className="text-sm">+254 XXX XXX XXX</span>
+    </div>
+  </div>
+</div>
 
         {/* Bottom Bar */}
         <div className="text-center">
