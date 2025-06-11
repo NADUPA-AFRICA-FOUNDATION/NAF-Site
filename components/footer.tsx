@@ -78,19 +78,12 @@ export function Footer() {
               </div>
               <div className="flex items-center gap-2">
                 <Mail className="w-4 h-4 text-emerald-400" />
-                <span className="text-sm">info@nadupaafricafoundation.org</span>
+                
               </div>
-              <div className="flex items-center gap-2">
+    nadupaafricafoundation@gmail.comitems-center gap-2">
                 <Phone className="w-4 h-4 text-emerald-400" />
                 <span className="text-sm">+254 XXX XXX XXX</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* African Pattern Divider */}
-        <div className="my-8 border-t border-stone-700 pt-8 relative">
-          <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+             "absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
               <div className="w-2 h-2 bg-amber-500 rounded-full"></div>
