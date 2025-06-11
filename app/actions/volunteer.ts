@@ -112,8 +112,8 @@ export async function submitVolunteerForm(formData: FormData) {
       agreeToTerms: rawData.agreeToTerms,
     })
 
-    // Insert into Supabase
-    const { error } = await supabaseAdmin.from("volunteer_signups").insert({
+    // Prepare data for insertion - ensure all fields match the database schema
+    const insertData = {
       first_name: validatedData.firstName,
       last_name: validatedData.lastName,
       email: validatedData.email.toLowerCase(),
@@ -135,9 +135,14 @@ export async function submitVolunteerForm(formData: FormData) {
       commitment_length: validatedData.commitmentLength || null,
       start_date: validatedData.startDate || null,
       references: validatedData.references || null,
-      additional_info: validatedData.additionalInfo || null,
+      additional_info: validatedData.additionalInfo || null, // This field now exists
       agree_to_terms: validatedData.agreeToTerms,
-    })
+    }
+
+    console.log("Attempting to insert volunteer data:", insertData)
+
+    // Insert into Supabase
+    const { data: insertedData, error } = await supabaseAdmin.from("volunteer_signups").insert(insertData).select()
 
     if (error) {
       console.error("Supabase error:", error)
@@ -146,6 +151,8 @@ export async function submitVolunteerForm(formData: FormData) {
         message: "There was an error submitting your application. Please try again.",
       }
     }
+
+    console.log("Volunteer data inserted successfully:", insertedData)
 
     // Send email notifications
     try {

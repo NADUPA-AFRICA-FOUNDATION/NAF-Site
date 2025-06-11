@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { toast } from "@/components/ui/use-toast"
 import { Toaster } from "@/components/ui/toaster"
-import { CheckCircle2, Loader2 } from "lucide-react"
+import { CheckCircle2, Loader2, AlertCircle } from "lucide-react"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Label } from "@/components/ui/label"
@@ -22,6 +22,7 @@ export function VolunteerForm() {
   const [selectedAvailability, setSelectedAvailability] = useState<string[]>([])
   const [selectedSkills, setSelectedSkills] = useState<string[]>([])
   const [agreeToTerms, setAgreeToTerms] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const areasOfInterest = [
     { id: "education", label: "Education Support" },
@@ -62,6 +63,7 @@ export function VolunteerForm() {
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     setIsSubmitting(true)
+    setError(null)
 
     const formData = new FormData(event.currentTarget)
 
@@ -72,7 +74,9 @@ export function VolunteerForm() {
     formData.append("agreeToTerms", agreeToTerms.toString())
 
     try {
+      console.log("Submitting volunteer form...")
       const result = await submitVolunteerForm(formData)
+      console.log("Form submission result:", result)
 
       if (result.success) {
         setIsSubmitted(true)
@@ -87,6 +91,7 @@ export function VolunteerForm() {
         setSelectedSkills([])
         setAgreeToTerms(false)
       } else {
+        setError(result.message)
         toast({
           title: "Error",
           description: result.message,
@@ -95,9 +100,11 @@ export function VolunteerForm() {
       }
     } catch (error) {
       console.error("Form submission error:", error)
+      const errorMessage = error instanceof Error ? error.message : "Something went wrong. Please try again."
+      setError(errorMessage)
       toast({
         title: "Error",
-        description: "Something went wrong. Please try again.",
+        description: errorMessage,
         variant: "destructive",
       })
     } finally {
@@ -127,7 +134,10 @@ export function VolunteerForm() {
           application and contact you within 5-7 business days.
         </p>
         <Button
-          onClick={() => setIsSubmitted(false)}
+          onClick={() => {
+            setIsSubmitted(false)
+            setError(null)
+          }}
           variant="outline"
           className="border-emerald-600 text-emerald-600 hover:bg-emerald-50"
         >
@@ -140,6 +150,16 @@ export function VolunteerForm() {
   return (
     <>
       <form onSubmit={handleSubmit} className="space-y-8">
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-md p-4 flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" />
+            <div>
+              <h4 className="text-sm font-medium text-red-800">Error</h4>
+              <p className="text-sm text-red-700 mt-1">{error}</p>
+            </div>
+          </div>
+        )}
+
         {/* Personal Information */}
         <div className="space-y-6">
           <h3 className="text-xl font-semibold text-stone-800 border-b border-stone-200 pb-2">Personal Information</h3>
@@ -149,14 +169,16 @@ export function VolunteerForm() {
               <label htmlFor="firstName" className="block text-sm font-medium text-stone-700 mb-2">
                 First Name <span className="text-red-500">*</span>
               </label>
-              <Input id="firstName" name="firstName" placeholder="Enter your first name" required />
+              <Input id="firstName" name="firstName" placeholder="Enter your first name" maxLength={100} required />
+              <p className="text-xs text-stone-500 mt-1">Maximum 100 characters</p>
             </div>
 
             <div>
               <label htmlFor="lastName" className="block text-sm font-medium text-stone-700 mb-2">
                 Last Name <span className="text-red-500">*</span>
               </label>
-              <Input id="lastName" name="lastName" placeholder="Enter your last name" required />
+              <Input id="lastName" name="lastName" placeholder="Enter your last name" maxLength={100} required />
+              <p className="text-xs text-stone-500 mt-1">Maximum 100 characters</p>
             </div>
           </div>
 
@@ -172,7 +194,7 @@ export function VolunteerForm() {
               <label htmlFor="phone" className="block text-sm font-medium text-stone-700 mb-2">
                 Phone Number
               </label>
-              <Input id="phone" name="phone" placeholder="+254 XXX XXX XXX" />
+              <Input id="phone" name="phone" placeholder="+254 796093465" />
             </div>
           </div>
 
@@ -273,8 +295,10 @@ export function VolunteerForm() {
               name="motivation"
               placeholder="Tell us about your motivation to volunteer with NADUPA AFRICA FOUNDATION..."
               className="min-h-32"
+              maxLength={2000}
               required
             />
+            <p className="text-xs text-stone-500 mt-1">Maximum 2000 characters</p>
           </div>
 
           <div className="space-y-4">

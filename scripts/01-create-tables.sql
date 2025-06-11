@@ -1,6 +1,7 @@
 -- Create contact_messages table
 CREATE TABLE IF NOT EXISTS contact_messages (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  name TEXT, -- Add name field for compatibility
   first_name TEXT NOT NULL,
   last_name TEXT NOT NULL,
   email TEXT NOT NULL,
@@ -35,7 +36,7 @@ CREATE TABLE IF NOT EXISTS volunteer_signups (
   commitment_length TEXT,
   start_date DATE,
   references TEXT,
-  additional_info TEXT,
+  additional_info TEXT, -- Add this missing column
   agree_to_terms BOOLEAN NOT NULL DEFAULT FALSE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()

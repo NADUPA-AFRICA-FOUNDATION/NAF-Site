@@ -110,10 +110,10 @@ export default function ContactPage() {
                 <CardContent>
                   <div className="space-y-2">
                     <p className="text-stone-600">
-                      <strong>Main Office:</strong> +254 XXX XXX XXX
+                      <strong>Main Office:</strong> +254 796093465
                     </p>
                     <p className="text-stone-600">
-                      <strong>WhatsApp:</strong> +254 XXX XXX XXX
+                      <strong>WhatsApp:</strong> +254 796093465
                     </p>
                     <p className="text-stone-500 text-sm mt-3">
                       Available Monday - Friday, 8:00 AM - 5:00 PM EAT
