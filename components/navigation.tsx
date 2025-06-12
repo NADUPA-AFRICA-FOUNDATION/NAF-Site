@@ -16,7 +16,6 @@ export function Navigation() {
     { href: "/where-we-work", label: "Where We Work" },
     { href: "/get-involved", label: "Get Involved" },
     { href: "/volunteer", label: "Volunteer" },
-    { href: "/resources", label: "Resources" },
     { href: "/contact", label: "Contact" },
   ]
 
@@ -29,7 +28,7 @@ export function Navigation() {
             <div className="relative h-12 w-24">
               <Image
                 src="/images/nadupa-logo-vertical.png"
-                alt="NADUPA Africa Foundation Logo"
+                alt="NADUPA AFRICA FOUNDATION Logo"
                 fill
                 className="object-contain object-left"
                 priority

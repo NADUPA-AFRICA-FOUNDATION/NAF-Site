@@ -1,8 +1,21 @@
 import { VolunteerApplicationForm } from "@/components/volunteer-application-form"
+import Link from "next/link"
+import { Button } from "@/components/ui/button"
+import { ArrowLeft } from "lucide-react"
 
 export default function VolunteerPage() {
   return (
     <div className="min-h-screen bg-stone-50">
+      {/* Back Button */}
+      <div className="container mx-auto px-4 pt-6">
+        <Link href="/get-involved">
+          <Button variant="outline" className="flex items-center gap-2 mb-6">
+            <ArrowLeft className="w-4 h-4" />
+            <span>Back to Get Involved</span>
+          </Button>
+        </Link>
+      </div>
+
       {/* Hero Section */}
       <section className="bg-emerald-600 text-white py-16">
         <div className="container mx-auto px-4">
@@ -79,6 +92,16 @@ export default function VolunteerPage() {
               </p>
             </div>
             <VolunteerApplicationForm />
+
+            {/* Back Button at Bottom */}
+            <div className="mt-8 text-center">
+              <Link href="/get-involved">
+                <Button variant="outline" className="flex items-center gap-2 mx-auto">
+                  <ArrowLeft className="w-4 h-4" />
+                  <span>Back to Get Involved</span>
+                </Button>
+              </Link>
+            </div>
           </div>
         </div>
       </section>

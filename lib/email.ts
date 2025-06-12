@@ -15,8 +15,8 @@ export interface EmailTemplate {
 }
 
 export class EmailService {
-  private static readonly FROM_EMAIL = "NADUPA Africa Foundation <noreply@nadupaafricafoundation.org>"
-  private static readonly ADMIN_EMAIL = "admin@nadupaafricafoundation.org"
+  private static readonly FROM_EMAIL = "NADUPA AFRICA FOUNDATION <info@nadupaafricafoundation.org>"
+  private static readonly ADMIN_EMAIL = "info@nadupaafricafoundation.org"
 
   static async sendEmail({ to, subject, html, from }: EmailTemplate) {
     if (!resend) {
@@ -52,7 +52,7 @@ export class EmailService {
     // Send confirmation email to user
     const userConfirmation = await this.sendEmail({
       to: data.email,
-      subject: "Thank you for contacting NADUPA Africa Foundation",
+      subject: "Thank you for contacting NADUPA AFRICA FOUNDATION",
       html: this.generateContactConfirmationEmail(data),
     })
 
@@ -79,7 +79,7 @@ export class EmailService {
     // Send confirmation email to volunteer
     const userConfirmation = await this.sendEmail({
       to: data.email,
-      subject: "Thank you for your volunteer application - NADUPA Africa Foundation",
+      subject: "Thank you for your volunteer application - NADUPA AFRICA FOUNDATION",
       html: this.generateVolunteerConfirmationEmail(data),
     })
 
@@ -106,7 +106,7 @@ export class EmailService {
     // Send confirmation email to donor
     const userConfirmation = await this.sendEmail({
       to: data.email,
-      subject: "Thank you for your donation interest - NADUPA Africa Foundation",
+      subject: "Thank you for your donation interest - NADUPA AFRICA FOUNDATION",
       html: this.generateDonationConfirmationEmail({ ...data, amount }),
     })
 
@@ -145,13 +145,13 @@ export class EmailService {
         <body>
           <div class="header">
             <h1>Thank You for Contacting Us!</h1>
-            <p>NADUPA Africa Foundation</p>
+            <p>NADUPA AFRICA FOUNDATION</p>
           </div>
           
           <div class="content">
             <p>Dear ${data.firstName} ${data.lastName},</p>
             
-            <p>Thank you for reaching out to NADUPA Africa Foundation. We have received your message regarding "<strong>${data.subject}</strong>" and appreciate your interest in our work.</p>
+            <p>Thank you for reaching out to NADUPA AFRICA FOUNDATION. We have received your message regarding "<strong>${data.subject}</strong>" and appreciate your interest in our work.</p>
             
             <div class="highlight">
               <p><strong>What happens next?</strong></p>
@@ -172,11 +172,11 @@ export class EmailService {
             <p>Thank you for your commitment to empowering communities across Kenya.</p>
             
             <p>Warm regards,<br>
-            <strong>The NADUPA Africa Foundation Team</strong></p>
+            <strong>The NADUPA AFRICA FOUNDATION Team</strong></p>
           </div>
           
           <div class="footer">
-            <p>NADUPA Africa Foundation | Kajiado-West, Kajiado County, Kenya<br>
+            <p>NADUPA AFRICA FOUNDATION | Kajiado-West, Kajiado County, Kenya<br>
             Email: info@nadupaafricafoundation.org | Registration: NGO-6DF3EM</p>
             <p><em>Empowering Communities, Transforming Lives</em></p>
           </div>
@@ -214,7 +214,7 @@ export class EmailService {
         <body>
           <div class="header">
             <h1>🔔 New Contact Form Submission</h1>
-            <p>NADUPA Africa Foundation Admin Panel</p>
+            <p>NADUPA AFRICA FOUNDATION Admin Panel</p>
           </div>
           
           <div class="content">
@@ -289,13 +289,13 @@ export class EmailService {
         <body>
           <div class="header">
             <h1>🙌 Welcome to Our Volunteer Community!</h1>
-            <p>NADUPA Africa Foundation</p>
+            <p>NADUPA AFRICA FOUNDATION</p>
           </div>
           
           <div class="content">
             <p>Dear ${data.firstName} ${data.lastName},</p>
             
-            <p>Thank you for your interest in volunteering with NADUPA Africa Foundation! We are excited about your passion for making a difference in communities across Kenya.</p>
+            <p>Thank you for your interest in volunteering with NADUPA AFRICA FOUNDATION! We are excited about your passion for making a difference in communities across Kenya.</p>
             
             <div class="highlight">
               <p><strong>Your Application Status:</strong></p>
@@ -316,25 +316,26 @@ export class EmailService {
               <li>Our team will review your application and experience</li>
               <li>We'll match you with suitable volunteer opportunities</li>
               <li>You'll receive an invitation for an orientation session</li>
-              <li>Begin making a meaningful impact in communities!</li>
+              <li>Complete any required training or background checks</li>
+              <li>Begin your volunteer journey with us!</li>
             </ol>
             
-            <p>While you wait, feel free to:</p>
+            <p>While you wait, we encourage you to:</p>
             <ul>
-              <li>Learn more about our <a href="https://nadupaafricafoundation.org/programs">current programs</a></li>
-              <li>Read about <a href="https://nadupaafricafoundation.org/where-we-work">the communities we serve</a></li>
-              <li>Connect with us on social media</li>
+              <li>Follow our social media for updates on current projects</li>
+              <li>Read our volunteer handbook (will be provided)</li>
+              <li>Prepare any questions you might have about our programs</li>
             </ul>
             
             <p>Thank you for choosing to be part of our mission to empower communities and transform lives.</p>
             
             <p>With gratitude,<br>
-            <strong>The NADUPA Africa Foundation Volunteer Team</strong></p>
+            <strong>The NADUPA AFRICA FOUNDATION Volunteer Team</strong></p>
           </div>
           
           <div class="footer">
-            <p>NADUPA Africa Foundation | Kajiado-West, Kajiado County, Kenya<br>
-            Email: volunteer@nadupaafricafoundation.org | Registration: NGO-6DF3EM</p>
+            <p>NADUPA AFRICA FOUNDATION | Kajiado-West, Kajiado County, Kenya<br>
+            Email: info@nadupaafricafoundation.org | Registration: NGO-6DF3EM</p>
             <p><em>Empowering Communities, Transforming Lives</em></p>
           </div>
         </body>
@@ -366,22 +367,22 @@ export class EmailService {
             .field { margin: 15px 0; padding: 10px; background: white; border-radius: 4px; border-left: 4px solid #f59e0b; }
             .field-label { font-weight: bold; color: #374151; }
             .field-value { margin-top: 5px; }
-            .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
-            .tag { background: #059669; color: white; padding: 2px 8px; border-radius: 12px; font-size: 11px; }
+            .tags { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
+            .tag { background: #059669; color: white; padding: 4px 12px; border-radius: 20px; font-size: 12px; }
             .motivation-box { background: white; padding: 20px; border-radius: 6px; border: 1px solid #d1d5db; margin: 20px 0; }
           </style>
         </head>
         <body>
           <div class="header">
             <h1>🆕 New Volunteer Application</h1>
-            <p>NADUPA Africa Foundation Admin Panel</p>
+            <p>NADUPA AFRICA FOUNDATION Admin Panel</p>
           </div>
           
           <div class="content">
             <p><strong>A new volunteer application has been submitted.</strong></p>
             
             <div class="field">
-              <div class="field-label">Applicant:</div>
+              <div class="field-label">Name:</div>
               <div class="field-value">${data.firstName} ${data.lastName}</div>
             </div>
             
@@ -411,7 +412,7 @@ export class EmailService {
             <div class="field">
               <div class="field-label">Availability:</div>
               <div class="tags">
-                ${data.availability.map((day) => `<span class="tag">${day}</span>`).join("")}
+                ${data.availability.map((time) => `<span class="tag">${time}</span>`).join("")}
               </div>
             </div>
             
@@ -425,7 +426,7 @@ export class EmailService {
               <div class="field-value" style="white-space: pre-wrap;">${data.motivation}</div>
             </div>
             
-            <p><strong>Action Required:</strong> Please review the full application in the admin dashboard and contact the applicant within 5-7 business days.</p>
+            <p><strong>Action Required:</strong> Please review and respond to this application within 5-7 business days.</p>
           </div>
         </body>
       </html>
@@ -451,54 +452,49 @@ export class EmailService {
             .content { background: #f9fafb; padding: 30px; border-radius: 0 0 8px 8px; }
             .footer { text-align: center; margin-top: 30px; padding: 20px; color: #6b7280; font-size: 14px; }
             .highlight { background: #fef2f2; padding: 15px; border-left: 4px solid #dc2626; margin: 20px 0; }
-            .amount-box { background: #059669; color: white; padding: 20px; text-align: center; border-radius: 8px; margin: 20px 0; }
-            .amount { font-size: 32px; font-weight: bold; }
+            .amount { font-size: 24px; font-weight: bold; color: #dc2626; text-align: center; margin: 20px 0; }
           </style>
         </head>
         <body>
           <div class="header">
-            <h1>💝 Thank You for Your Generosity!</h1>
-            <p>NADUPA Africa Foundation</p>
+            <h1>❤️ Thank You for Your Generosity!</h1>
+            <p>NADUPA AFRICA FOUNDATION</p>
           </div>
           
           <div class="content">
             <p>Dear ${data.fullName},</p>
             
-            <p>Thank you for your generous intention to support NADUPA Africa Foundation. Your contribution will make a real difference in the lives of vulnerable communities across Kenya.</p>
+            <p>Thank you for your generous donation interest to NADUPA AFRICA FOUNDATION. Your support means the world to us and the communities we serve.</p>
             
-            <div class="amount-box">
-              <div class="amount">$${data.amount}</div>
-              <p>Your intended donation amount</p>
-            </div>
+            <div class="amount">$${data.amount}</div>
             
             <div class="highlight">
               <p><strong>Next Steps:</strong></p>
               <ul>
-                <li>Our team will contact you within 24 hours with secure payment details</li>
-                <li>You'll receive instructions for ${data.paymentMethod} payment processing</li>
-                <li>After payment, you'll receive a donation receipt for tax purposes</li>
-                <li>We'll send you updates on how your donation is making an impact</li>
+                <li>Our team will contact you within 24 hours</li>
+                <li>We'll provide secure payment instructions</li>
+                <li>You'll receive a donation receipt for tax purposes</li>
+                <li>We'll share impact updates on how your donation is used</li>
               </ul>
             </div>
             
-            <p><strong>Your donation will help us:</strong></p>
+            <p><strong>Your Impact:</strong></p>
             <ul>
-              <li>🎓 Provide education support to vulnerable children</li>
-              <li>🌱 Advance environmental conservation initiatives</li>
-              <li>🤝 Support persons with disabilities</li>
-              <li>💪 Empower communities through training programs</li>
-              <li>🏥 Improve healthcare access in rural areas</li>
+              <li>$25 can provide clean water access for one family for a month</li>
+              <li>$50 can sponsor a child's education for one term</li>
+              <li>$100 can support a microfinance loan for a small business</li>
+              <li>$250 can fund a community health workshop</li>
             </ul>
             
-            <p>If you have any questions about your donation or our programs, please don't hesitate to contact us.</p>
+            <p>Every contribution, regardless of size, makes a meaningful difference in the lives of families across Kenya.</p>
             
             <p>With heartfelt gratitude,<br>
-            <strong>The NADUPA Africa Foundation Team</strong></p>
+            <strong>The NADUPA AFRICA FOUNDATION Team</strong></p>
           </div>
           
           <div class="footer">
-            <p>NADUPA Africa Foundation | Kajiado-West, Kajiado County, Kenya<br>
-            Email: donations@nadupaafricafoundation.org | Registration: NGO-6DF3EM</p>
+            <p>NADUPA AFRICA FOUNDATION | Kajiado-West, Kajiado County, Kenya<br>
+            Email: info@nadupaafricafoundation.org | Registration: NGO-6DF3EM</p>
             <p><em>Empowering Communities, Transforming Lives</em></p>
           </div>
         </body>
@@ -527,21 +523,19 @@ export class EmailService {
             .field { margin: 15px 0; padding: 10px; background: white; border-radius: 4px; border-left: 4px solid #dc2626; }
             .field-label { font-weight: bold; color: #374151; }
             .field-value { margin-top: 5px; }
-            .amount-highlight { background: #059669; color: white; padding: 15px; text-align: center; border-radius: 6px; margin: 20px 0; font-size: 24px; font-weight: bold; }
+            .amount { font-size: 24px; font-weight: bold; color: #dc2626; text-align: center; margin: 20px 0; }
           </style>
         </head>
         <body>
           <div class="header">
             <h1>💰 New Donation Interest</h1>
-            <p>NADUPA Africa Foundation Admin Panel</p>
+            <p>NADUPA AFRICA FOUNDATION Admin Panel</p>
           </div>
           
           <div class="content">
-            <p><strong>A new donation interest has been submitted on the website.</strong></p>
+            <p><strong>A new donation interest has been submitted.</strong></p>
             
-            <div class="amount-highlight">
-              $${data.amount}
-            </div>
+            <div class="amount">$${data.amount}</div>
             
             <div class="field">
               <div class="field-label">Donor Name:</div>
@@ -563,7 +557,7 @@ export class EmailService {
               <div class="field-value">${new Date(data.submittedAt).toLocaleString()}</div>
             </div>
             
-            <p><strong>Action Required:</strong> Please contact the donor within 24 hours with secure payment instructions for ${data.paymentMethod}.</p>
+            <p><strong>Action Required:</strong> Please contact the donor within 24 hours to facilitate the donation process.</p>
           </div>
         </body>
       </html>

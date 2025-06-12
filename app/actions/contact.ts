@@ -1,133 +1,105 @@
 "use server"
 
-import { supabaseAdmin, testSupabaseConnection, isSupabaseConfigured } from "@/lib/supabase"
-import { contactFormSchema } from "@/lib/validation"
-import { EmailService } from "@/lib/email"
-import { revalidatePath } from "next/cache"
-import { ZodError } from "zod"
-import { submitContactFormFallback } from "./contact-fallback"
+import { supabaseAdmin } from "@/lib/supabase"
+import { sendEmail } from "@/lib/email"
 
 export async function submitContactForm(formData: FormData) {
   try {
-    console.log("Starting contact form submission...")
+    const name = formData.get("name") as string
+    const email = formData.get("email") as string
+    const subject = formData.get("subject") as string
+    const message = formData.get("message") as string
 
-    // Extract and validate form data first
-    const rawData = {
-      firstName: formData.get("firstName") as string,
-      lastName: formData.get("lastName") as string,
-      email: formData.get("email") as string,
-      phone: formData.get("phone") as string,
-      subject: formData.get("subject") as string,
-      message: formData.get("message") as string,
-    }
-
-    console.log("Raw form data received")
-
-    // Basic null checks
-    if (!rawData.firstName?.trim()) {
-      return { success: false, message: "First name is required." }
-    }
-    if (!rawData.lastName?.trim()) {
-      return { success: false, message: "Last name is required." }
-    }
-    if (!rawData.email?.trim()) {
-      return { success: false, message: "Email address is required." }
-    }
-    if (!rawData.subject?.trim()) {
-      return { success: false, message: "Subject is required." }
-    }
-    if (!rawData.message?.trim()) {
-      return { success: false, message: "Message is required." }
-    }
-
-    // Validate the data with Zod
-    const validatedData = contactFormSchema.parse({
-      firstName: rawData.firstName.trim(),
-      lastName: rawData.lastName.trim(),
-      email: rawData.email.trim(),
-      phone: rawData.phone?.trim() || undefined,
-      subject: rawData.subject.trim(),
-      message: rawData.message.trim(),
-    })
-
-    console.log("Data validated successfully")
-
-    // Check if Supabase is configured
-    if (!isSupabaseConfigured()) {
-      console.log("Supabase not configured, using fallback method")
-      return await submitContactFormFallback(formData)
-    }
-
-    // Test Supabase connection
-    const connectionTest = await testSupabaseConnection()
-
-    if (!connectionTest.success) {
-      console.log("Database not available, using fallback method:", connectionTest.message)
-      return await submitContactFormFallback(formData)
-    }
-
-    // Prepare data for insertion
-    const insertData = {
-      name: `${validatedData.firstName} ${validatedData.lastName}`, // Add name field
-      first_name: validatedData.firstName,
-      last_name: validatedData.lastName,
-      email: validatedData.email.toLowerCase(),
-      phone: validatedData.phone || null,
-      subject: validatedData.subject,
-      message: validatedData.message,
-    }
-
-    console.log("Attempting to insert data into Supabase...")
-
-    // Insert into Supabase with detailed error handling
-    const { data: insertedData, error } = await supabaseAdmin.from("contact_messages").insert(insertData).select()
-
-    if (error) {
-      console.error("Supabase insertion error:", error)
-      console.log("Database insertion failed, using fallback method...")
-      return await submitContactFormFallback(formData)
-    }
-
-    console.log("Data inserted successfully:", insertedData)
-
-    // Send email notifications
-    try {
-      console.log("Sending email notifications...")
-      await EmailService.sendContactFormNotification({
-        firstName: validatedData.firstName,
-        lastName: validatedData.lastName,
-        email: validatedData.email.toLowerCase(),
-        phone: validatedData.phone,
-        subject: validatedData.subject,
-        message: validatedData.message,
-        submittedAt: new Date().toISOString(),
-      })
-      console.log("Email notifications sent successfully")
-    } catch (emailError) {
-      console.error("Email notification error:", emailError)
-      // Don't fail the form submission if email fails
-    }
-
-    revalidatePath("/contact")
-
-    return {
-      success: true,
-      message: "Thank you for your message! We will get back to you within 24 hours.",
-    }
-  } catch (error) {
-    console.error("Contact form submission error:", error)
-
-    if (error instanceof ZodError) {
-      const firstError = error.errors[0]
-      console.error("Validation error:", firstError)
+    // Validate required fields
+    if (!name || !email || !subject || !message) {
       return {
         success: false,
-        message: firstError.message,
+        error: "All fields are required",
       }
     }
 
-    // If all else fails, try the fallback
-    console.log("Main submission failed, trying fallback...")
-    return await submitContactFormFallback(formData)
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(email)) {
+      return {
+        success: false,
+        error: "Please enter a valid email address",
+      }
+    }
+
+    // Try to save to database first
+    let databaseSaved = false
+    try {
+      const { error: dbError } = await supabaseAdmin.from("contact_messages").insert([
+        {
+          name,
+          email,
+          subject,
+          message,
+          created_at: new Date().toISOString(),
+        },
+      ])
+
+      if (dbError) {
+        console.error("Database save error:", dbError)
+      } else {
+        databaseSaved = true
+        console.log("Contact message saved to database successfully")
+      }
+    } catch (dbError) {
+      console.error("Database connection error:", dbError)
+    }
+
+    // Send email notification
+    try {
+      await sendEmail({
+        to: "info@nadupaafricafoundation.org",
+        subject: `New Contact Form Submission: ${subject}`,
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2 style="color: #059669;">New Contact Form Submission</h2>
+            <div style="background-color: #f9f9f9; padding: 20px; border-radius: 8px; margin: 20px 0;">
+              <p><strong>Name:</strong> ${name}</p>
+              <p><strong>Email:</strong> ${email}</p>
+              <p><strong>Subject:</strong> ${subject}</p>
+              <p><strong>Message:</strong></p>
+              <div style="background-color: white; padding: 15px; border-radius: 4px; margin-top: 10px;">
+                ${message.replace(/\n/g, "<br>")}
+              </div>
+            </div>
+            <p style="color: #666; font-size: 12px;">
+              Database Status: ${databaseSaved ? "Saved successfully" : "Not saved (using email fallback)"}
+            </p>
+          </div>
+        `,
+      })
+
+      return {
+        success: true,
+        message: "Thank you for your message! We will get back to you soon.",
+        databaseSaved,
+      }
+    } catch (emailError) {
+      console.error("Email send error:", emailError)
+
+      if (databaseSaved) {
+        return {
+          success: true,
+          message: "Your message has been received and saved. We will get back to you soon.",
+          databaseSaved: true,
+        }
+      } else {
+        return {
+          success: false,
+          error: "Sorry, there was an error sending your message. Please try again or contact us directly.",
+        }
+      }
+    }
+  } catch (error) {
+    console.error("Contact form submission error:", error)
+    return {
+      success: false,
+      error: "An unexpected error occurred. Please try again.",
+    }
   }
 }

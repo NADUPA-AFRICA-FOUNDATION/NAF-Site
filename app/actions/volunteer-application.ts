@@ -1,132 +1,181 @@
 "use server"
 
 import { supabaseAdmin } from "@/lib/supabase"
-import { volunteerApplicationSchema } from "@/lib/volunteer-validation"
-import { revalidatePath } from "next/cache"
+import { sendEmail } from "@/lib/email"
+import { validateVolunteerApplication, type VolunteerApplicationData } from "@/lib/volunteer-validation"
 
 export async function submitVolunteerApplication(formData: FormData) {
   try {
-    // Extract form data with better handling
-    const firstName = formData.get("firstName")?.toString().trim() || ""
-    const lastName = formData.get("lastName")?.toString().trim() || ""
-    const email = formData.get("email")?.toString().trim().toLowerCase() || ""
-    const phone = formData.get("phone")?.toString().trim() || ""
-    const motivation = formData.get("motivation")?.toString().trim() || ""
-    const additionalInfo = formData.get("additionalInfo")?.toString().trim() || ""
-    const agreeToTerms = formData.get("agreeToTerms") === "true"
+    // Extract and validate form data
+    const applicationData: VolunteerApplicationData = {
+      // Personal Information
+      firstName: formData.get("firstName") as string,
+      lastName: formData.get("lastName") as string,
+      email: formData.get("email") as string,
+      phone: formData.get("phone") as string,
+      dateOfBirth: formData.get("dateOfBirth") as string,
+      nationality: formData.get("nationality") as string,
 
-    // Get arrays
-    const areasOfInterest = formData.getAll("areasOfInterest").map((item) => item.toString())
-    const availability = formData.getAll("availability").map((item) => item.toString())
-    const skills = formData.getAll("skills").map((item) => item.toString())
+      // Address Information
+      address: formData.get("address") as string,
+      city: formData.get("city") as string,
+      country: formData.get("country") as string,
 
-    console.log("Form data received:", {
-      firstName,
-      lastName,
-      email,
-      phone,
-      motivation: `"${motivation}" (length: ${motivation.length})`,
-      areasOfInterest,
-      availability,
-      skills,
-      additionalInfo,
-      agreeToTerms,
-    })
+      // Volunteer Information
+      availability: formData.get("availability") as string,
+      duration: formData.get("duration") as string,
+      areasOfInterest: formData.getAll("areasOfInterest") as string[],
+      skills: formData.get("skills") as string,
+      experience: formData.get("experience") as string,
+      motivation: formData.get("motivation") as string,
 
-    // Prepare data for validation
-    const rawData = {
-      firstName,
-      lastName,
-      email,
-      phone: phone || undefined,
-      motivation,
-      areasOfInterest,
-      availability,
-      skills: skills.length > 0 ? skills : undefined,
-      additionalInfo: additionalInfo || undefined,
-      agreeToTerms,
+      // Additional Information
+      languages: formData.get("languages") as string,
+      emergencyContact: formData.get("emergencyContact") as string,
+      emergencyPhone: formData.get("emergencyPhone") as string,
+      medicalConditions: formData.get("medicalConditions") as string,
+
+      // Agreements
+      backgroundCheck: formData.get("backgroundCheck") === "on",
+      termsAccepted: formData.get("termsAccepted") === "on",
     }
 
-    // Validate with Zod
-    const validatedData = volunteerApplicationSchema.parse(rawData)
-
-    // Prepare data for database
-    const dbData = {
-      first_name: validatedData.firstName,
-      last_name: validatedData.lastName,
-      email: validatedData.email,
-      phone: validatedData.phone || null,
-      motivation: validatedData.motivation,
-      areas_of_interest: validatedData.areasOfInterest.join(", "),
-      availability: validatedData.availability.join(", "),
-      skills: validatedData.skills && validatedData.skills.length > 0 ? validatedData.skills.join(", ") : null,
-      additional_info: validatedData.additionalInfo || null,
-    }
-
-    // Insert into database
-    const { data, error } = await supabaseAdmin.from("volunteer_applications").insert(dbData).select()
-
-    if (error) {
-      console.error("Database error:", error)
-
-      if (error.message.includes("does not exist")) {
-        return {
-          success: false,
-          message: "Database setup required. Please run the volunteer table creation script.",
-          needsSetup: true,
-        }
-      }
-
+    // Validate the application data
+    const validation = validateVolunteerApplication(applicationData)
+    if (!validation.isValid) {
       return {
         success: false,
-        message: "Failed to submit application. Please try again.",
+        error: validation.errors.join(", "),
       }
     }
 
-    console.log("Volunteer application submitted successfully:", data[0]?.id)
+    // Try to save to database
+    let databaseSaved = false
+    try {
+      const { error: dbError } = await supabaseAdmin.from("volunteer_applications").insert([
+        {
+          first_name: applicationData.firstName,
+          last_name: applicationData.lastName,
+          email: applicationData.email,
+          phone: applicationData.phone,
+          date_of_birth: applicationData.dateOfBirth,
+          nationality: applicationData.nationality,
+          address: applicationData.address,
+          city: applicationData.city,
+          country: applicationData.country,
+          availability: applicationData.availability,
+          duration: applicationData.duration,
+          areas_of_interest: applicationData.areasOfInterest,
+          skills: applicationData.skills,
+          experience: applicationData.experience,
+          motivation: applicationData.motivation,
+          languages: applicationData.languages,
+          emergency_contact: applicationData.emergencyContact,
+          emergency_phone: applicationData.emergencyPhone,
+          medical_conditions: applicationData.medicalConditions,
+          background_check_consent: applicationData.backgroundCheck,
+          terms_accepted: applicationData.termsAccepted,
+          status: "pending",
+          created_at: new Date().toISOString(),
+        },
+      ])
 
-    revalidatePath("/volunteer")
+      if (dbError) {
+        console.error("Database save error:", dbError)
+      } else {
+        databaseSaved = true
+        console.log("Volunteer application saved to database successfully")
+      }
+    } catch (dbError) {
+      console.error("Database connection error:", dbError)
+    }
+
+    // Send confirmation email to applicant
+    try {
+      await sendEmail({
+        to: applicationData.email,
+        subject: "Volunteer Application Received - NADUPA AFRICA FOUNDATION",
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2 style="color: #059669;">Thank You for Your Volunteer Application!</h2>
+            <p>Dear ${applicationData.firstName} ${applicationData.lastName},</p>
+            <p>Thank you for your interest in volunteering with NADUPA AFRICA FOUNDATION. We have received your application and will review it carefully.</p>
+            
+            <div style="background-color: #f0f9ff; padding: 20px; border-radius: 8px; margin: 20px 0;">
+              <h3 style="color: #0369a1; margin-top: 0;">What happens next?</h3>
+              <ul style="color: #374151;">
+                <li>Our team will review your application within 5-7 business days</li>
+                <li>We may contact you for a brief interview or additional information</li>
+                <li>If selected, we'll provide detailed information about your volunteer placement</li>
+                <li>Background check and orientation will be arranged before you begin</li>
+              </ul>
+            </div>
+            
+            <p>If you have any questions, please don't hesitate to contact us at info@nadupaafricafoundation.org</p>
+            
+            <p>Best regards,<br>
+            <strong>NADUPA AFRICA FOUNDATION</strong><br>
+            Volunteer Coordination Team</p>
+          </div>
+        `,
+      })
+    } catch (emailError) {
+      console.error("Confirmation email error:", emailError)
+    }
+
+    // Send notification email to admin
+    try {
+      await sendEmail({
+        to: "info@nadupaafricafoundation.org",
+        subject: `New Volunteer Application: ${applicationData.firstName} ${applicationData.lastName}`,
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2 style="color: #059669;">New Volunteer Application Received</h2>
+            
+            <div style="background-color: #f9f9f9; padding: 20px; border-radius: 8px; margin: 20px 0;">
+              <h3>Personal Information</h3>
+              <p><strong>Name:</strong> ${applicationData.firstName} ${applicationData.lastName}</p>
+              <p><strong>Email:</strong> ${applicationData.email}</p>
+              <p><strong>Phone:</strong> ${applicationData.phone}</p>
+              <p><strong>Date of Birth:</strong> ${applicationData.dateOfBirth}</p>
+              <p><strong>Nationality:</strong> ${applicationData.nationality}</p>
+              <p><strong>Location:</strong> ${applicationData.city}, ${applicationData.country}</p>
+            </div>
+            
+            <div style="background-color: #f0f9ff; padding: 20px; border-radius: 8px; margin: 20px 0;">
+              <h3>Volunteer Preferences</h3>
+              <p><strong>Availability:</strong> ${applicationData.availability}</p>
+              <p><strong>Duration:</strong> ${applicationData.duration}</p>
+              <p><strong>Areas of Interest:</strong> ${applicationData.areasOfInterest.join(", ")}</p>
+              <p><strong>Skills:</strong> ${applicationData.skills}</p>
+            </div>
+            
+            <div style="background-color: #fef3c7; padding: 20px; border-radius: 8px; margin: 20px 0;">
+              <h3>Motivation</h3>
+              <p>${applicationData.motivation}</p>
+            </div>
+            
+            <p style="color: #666; font-size: 12px;">
+              Database Status: ${databaseSaved ? "Saved successfully" : "Not saved (email fallback mode)"}
+            </p>
+          </div>
+        `,
+      })
+    } catch (emailError) {
+      console.error("Admin notification email error:", emailError)
+    }
 
     return {
       success: true,
       message:
-        "Thank you! Your volunteer application has been submitted successfully. We'll contact you within 5-7 business days.",
+        "Thank you for your volunteer application! We will review it and get back to you within 5-7 business days.",
+      databaseSaved,
     }
   } catch (error) {
-    console.error("Volunteer application error:", error)
-
-    if (error instanceof Error && error.name === "ZodError") {
-      const zodError = error as any
-      const errors = zodError.errors || []
-
-      // Get the first error message
-      const firstError = errors[0]
-      let errorMessage = "Please check your form data and try again."
-
-      if (firstError) {
-        if (firstError.path.includes("motivation")) {
-          errorMessage = "Please provide at least 10 characters explaining your motivation to volunteer."
-        } else if (firstError.path.includes("areasOfInterest")) {
-          errorMessage = "Please select at least one area of interest."
-        } else if (firstError.path.includes("availability")) {
-          errorMessage = "Please select at least one day of availability."
-        } else if (firstError.path.includes("agreeToTerms")) {
-          errorMessage = "You must agree to the terms and conditions."
-        } else {
-          errorMessage = firstError.message || errorMessage
-        }
-      }
-
-      return {
-        success: false,
-        message: errorMessage,
-        validationErrors: errors,
-      }
-    }
-
+    console.error("Volunteer application submission error:", error)
     return {
       success: false,
-      message: "An unexpected error occurred. Please try again.",
+      error: "An unexpected error occurred. Please try again or contact us directly.",
     }
   }
 }

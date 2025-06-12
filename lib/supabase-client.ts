@@ -1,10 +1,3 @@
-// Re-export the singleton instances to ensure consistency
-export { supabase, supabaseAdmin } from "./supabase"
-
-// Utility function to get the appropriate client based on context
-export function getSupabaseClient(isServer = false) {
-  if (isServer) {
-    return require("./supabase").supabaseAdmin
-  }
-  return require("./supabase").supabase
-}
+// Simple re-export to maintain backward compatibility
+// This ensures we always use the same singleton instances
+export { supabase, supabaseAdmin, isSupabaseConfigured, testSupabaseConnection } from "./supabase"

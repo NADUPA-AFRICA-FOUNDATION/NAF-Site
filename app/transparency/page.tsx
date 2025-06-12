@@ -1,10 +1,8 @@
-"use client"
-
 import { Navigation } from "@/components/navigation"
 import { Footer } from "@/components/footer"
 import Image from "next/image"
 
-export default function ResourcesPage() {
+export default function TransparencyPage() {
   return (
     <div className="min-h-screen bg-stone-50">
       <Navigation />
@@ -23,7 +21,7 @@ export default function ResourcesPage() {
         </div>
 
         <div className="relative z-10 container mx-auto px-4 text-center text-white">
-          <h1 className="text-4xl md:text-6xl font-bold mb-6">Resources & Publications</h1>
+          <h1 className="text-4xl md:text-6xl font-bold mb-6">Financial Transparency</h1>
           <p className="text-xl md:text-2xl opacity-90 max-w-3xl mx-auto mb-8">
             This page is currently under maintenance.
           </p>
@@ -35,8 +33,8 @@ export default function ResourcesPage() {
         <div className="container mx-auto max-w-4xl text-center">
           <h2 className="text-3xl font-bold text-stone-800 mb-6">Coming Soon</h2>
           <p className="text-lg text-stone-600 mb-8">
-            We're currently updating our resources and publications. Please check back later for access to our reports,
-            documents, and other materials.
+            We're currently updating our financial transparency information. Please check back later for access to our
+            financial reports and statements.
           </p>
           <div className="flex justify-center">
             <a

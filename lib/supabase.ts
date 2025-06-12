@@ -1,31 +1,45 @@
 import { createClient } from "@supabase/supabase-js"
 
-// Environment variables with better type safety
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL as string
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY as string
+// Environment variables with better type safety and validation
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
-// Validate environment variables
+// Validate required environment variables
 if (!supabaseUrl) {
-  console.warn("Missing NEXT_PUBLIC_SUPABASE_URL environment variable")
+  console.error("Missing NEXT_PUBLIC_SUPABASE_URL environment variable")
+  throw new Error("Supabase URL is required")
 }
 
 if (!supabaseAnonKey) {
-  console.warn("Missing NEXT_PUBLIC_SUPABASE_ANON_KEY environment variable")
+  console.error("Missing NEXT_PUBLIC_SUPABASE_ANON_KEY environment variable")
+  throw new Error("Supabase anon key is required")
 }
 
-// Singleton instances
+// Global singleton instances to prevent multiple GoTrueClient instances
 let supabaseInstance: ReturnType<typeof createClient> | null = null
 let supabaseAdminInstance: ReturnType<typeof createClient> | null = null
 
 // Client-side client for public operations (singleton)
 export const supabase = (() => {
+  if (typeof window === "undefined") {
+    // Server-side: create a new instance each time to avoid sharing state
+    return createClient(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false,
+      },
+    })
+  }
+
+  // Client-side: use singleton
   if (!supabaseInstance) {
     supabaseInstance = createClient(supabaseUrl, supabaseAnonKey, {
       auth: {
         autoRefreshToken: true,
         persistSession: true,
-        storage: typeof window !== "undefined" ? window.localStorage : undefined,
+        storage: window.localStorage,
+        storageKey: "nadupa-auth-token", // Custom storage key to avoid conflicts
       },
     })
   }
@@ -34,8 +48,11 @@ export const supabase = (() => {
 
 // Server-side client with service role key for admin operations (singleton)
 export const supabaseAdmin = (() => {
+  // Use service role key if available, otherwise fall back to anon key
+  const adminKey = supabaseServiceKey || supabaseAnonKey
+
   if (!supabaseAdminInstance) {
-    supabaseAdminInstance = createClient(supabaseUrl, supabaseServiceKey || supabaseAnonKey, {
+    supabaseAdminInstance = createClient(supabaseUrl, adminKey, {
       auth: {
         autoRefreshToken: false,
         persistSession: false,
@@ -48,6 +65,11 @@ export const supabaseAdmin = (() => {
 // Check if Supabase is configured
 export function isSupabaseConfigured(): boolean {
   return Boolean(supabaseUrl && supabaseAnonKey)
+}
+
+// Check if admin features are available
+export function isSupabaseAdminConfigured(): boolean {
+  return Boolean(supabaseUrl && supabaseAnonKey && supabaseServiceKey)
 }
 
 // Test connection function

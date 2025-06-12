@@ -113,12 +113,12 @@ export default function TermsClientPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <p>
-                  By using this website, mobile application, or engaging with NADUPA Africa Foundation ("we," "our,"
+                  By using this website, mobile application, or engaging with NADUPA AFRICA FOUNDATION ("we," "our,"
                   "us," or "the Foundation"), you agree to be legally bound by these Terms and Conditions, our Privacy
                   Policy, Volunteer Code of Conduct, and any other policies referenced herein.
                 </p>
                 <p>
-                  These terms constitute a legally binding agreement between you and NADUPA Africa Foundation. Your
+                  These terms constitute a legally binding agreement between you and NADUPA AFRICA FOUNDATION. Your
                   continued use of our services after any modifications to these terms constitutes acceptance of such
                   changes.
                 </p>
@@ -192,7 +192,10 @@ export default function TermsClientPage() {
                     Professional Standards:
                   </h4>
                   <ul className="list-disc pl-6 space-y-1">
-                    <li>Follow all instructions and guidelines provided by NADUPA staff and community leaders</li>
+                    <li>
+                      Follow all instructions and guidelines provided by NADUPA AFRICA FOUNDATION staff and community
+                      leaders
+                    </li>
                     <li>Maintain punctuality and reliability in all commitments</li>
                     <li>Dress appropriately and modestly according to local customs</li>
                     <li>Maintain personal hygiene and health standards</li>
@@ -346,7 +349,7 @@ export default function TermsClientPage() {
                   <ul className="list-disc pl-6 space-y-1">
                     <li>
                       All website content, including text, images, logos, videos, and documents, is owned by NADUPA
-                      Africa Foundation
+                      AFRICA FOUNDATION
                     </li>
                     <li>Content is protected by copyright, trademark, and other intellectual property laws</li>
                     <li>Unauthorized use, reproduction, or distribution is strictly prohibited</li>
@@ -388,7 +391,7 @@ export default function TermsClientPage() {
                   <h4 className="font-semibold mb-2">General Limitations:</h4>
                   <ul className="list-disc pl-6 space-y-1">
                     <li>
-                      NADUPA Africa Foundation is not liable for direct, indirect, incidental, or consequential damages
+                      NADUPA AFRICA FOUNDATION is not liable for direct, indirect, incidental, or consequential damages
                     </li>
                     <li>Participation in programs and activities is at your own risk</li>
                     <li>The Foundation's liability is limited to the maximum extent permitted by law</li>
