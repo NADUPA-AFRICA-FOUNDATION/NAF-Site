@@ -564,3 +564,9 @@ export class EmailService {
     `
   }
 }
+
+// Named export for sendEmail function
+export const sendEmail = EmailService.sendEmail.bind(EmailService)
+
+// Export the EmailService as default
+export default EmailService
