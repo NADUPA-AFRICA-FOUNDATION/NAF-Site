@@ -17,12 +17,12 @@ export default function HomePage() {
     <div className="min-h-screen bg-stone-50">
       <Navigation />
 
-      {/* Hero Section with Forest Canopy Background */}
+      {/* Hero Section with Maasai Women Background */}
       <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0 z-0">
           <Image
-            src="/images/community-landscape.avif"
-            alt="African landscape representing hope and community development"
+            src="/images/maasai-women-community.png"
+            alt="Smiling Maasai women in traditional attire representing the communities we serve"
             fill
             className="object-cover object-center"
             priority
