@@ -13,6 +13,12 @@ export function proxy(request: NextRequest) {
   response.headers.set("X-Robots-Tag", "index, follow")
   response.headers.set("X-DNS-Prefetch-Control", "on")
 
+  response.headers.set("X-Frame-Options", "DENY")
+
+  if (process.env.NODE_ENV === "production") {
+    response.headers.set("Strict-Transport-Security", "max-age=63072000; includeSubDomains; preload")
+  }
+
   return response
 }
 
@@ -23,7 +29,8 @@ export const config = {
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
+     * - api (API routes)
      */
-    "/((?!_next/static|_next/image|favicon.ico).*)",
+    "/((?!_next/static|_next/image|favicon.ico|api).*)",
   ],
 }

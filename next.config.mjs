@@ -6,9 +6,23 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  
   images: {
     unoptimized: true,
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'blob.vercel-storage.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.supabase.co',
+        pathname: '/**',
+      },
+    ],
   },
+
   async headers() {
     return [
       {
@@ -53,18 +67,44 @@ const nextConfig = {
               "connect-src 'self' https://*.supabase.co https://blob.vercel-storage.com",
               "frame-ancestors 'none'",
               "base-uri 'self'",
-              "form-action 'self'"
+              "form-action 'self'",
+              "frame-src 'none'",
+              "object-src 'none'"
             ].join('; ')
+          }
+        ]
+      },
+      {
+        source: '/api/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'no-store, max-age=0'
+          }
+        ]
+      },
+      {
+        source: '/_next/static/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable'
           }
         ]
       }
     ]
   },
+
   reactStrictMode: true,
   poweredByHeader: false,
   compress: true,
   generateEtags: true,
+  
   output: 'standalone',
+  
+  env: {
+    NEXT_TELEMETRY_DISABLED: '1',
+  },
 }
 
 export default nextConfig
