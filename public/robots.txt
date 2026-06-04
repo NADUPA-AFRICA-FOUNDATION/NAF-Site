@@ -1,0 +1,23 @@
+# robots.txt for NADUPA Africa Foundation
+# https://nadupafrica.org/robots.txt
+
+# Allow all robots
+User-agent: *
+Allow: /
+
+# Disallow admin and API routes
+Disallow: /admin/
+Disallow: /api/
+
+# Specific rules for common crawlers
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+# Crawl delay (optional - 1 second between requests)
+Crawl-delay: 1
+
+# Sitemap location for search engines
+Sitemap: https://nadupafrica.org/sitemap.xml
