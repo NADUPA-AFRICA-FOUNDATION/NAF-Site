@@ -3,9 +3,8 @@
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { checkSimpleAdminAuth, signOutSimpleAdmin } from "@/lib/simple-auth"
-import { Shield, LogOut, FileText, Plus } from "lucide-react"
+import DocumentManagement from "@/components/document-management"
+import { Shield, LogOut } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 
 export default function AdminDocumentsPage() {
@@ -17,18 +16,19 @@ export default function AdminDocumentsPage() {
 
   useEffect(() => {
     checkAuth()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  const checkAuth = () => {
+  const checkAuth = async () => {
     try {
-      const { user, error } = checkSimpleAdminAuth()
+      const response = await fetch("/api/admin/session")
 
-      if (error || !user) {
-        console.log("Auth check failed:", error)
+      if (!response.ok) {
         router.push("/admin/login")
         return
       }
 
+      const { user } = await response.json()
       setUserEmail(user.email)
       setIsAuthenticated(true)
     } catch (err) {
@@ -39,8 +39,12 @@ export default function AdminDocumentsPage() {
     }
   }
 
-  const handleSignOut = () => {
-    signOutSimpleAdmin()
+  const handleSignOut = async () => {
+    try {
+      await fetch("/api/admin/logout", { method: "POST" })
+    } catch (err) {
+      console.error("Sign out error:", err)
+    }
     toast({
       title: "Signed out",
       description: "You have been signed out successfully.",
@@ -87,34 +91,7 @@ export default function AdminDocumentsPage() {
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto p-6">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold text-stone-800">Document Management</h1>
-          <Button className="bg-emerald-600 hover:bg-emerald-700">
-            <Plus className="w-4 h-4 mr-2" />
-            Add New Document
-          </Button>
-        </div>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <FileText className="w-5 h-5" />
-              Document Library
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-stone-600">
-              This is a placeholder for the document management system. You can upload, edit, and delete documents here.
-            </p>
-            <div className="mt-4">
-              <Button variant="outline" onClick={() => router.push("/")}>
-                Return to Website
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      <DocumentManagement />
     </div>
   )
 }

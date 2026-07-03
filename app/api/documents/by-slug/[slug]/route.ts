@@ -1,8 +1,8 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { documentContent } from "@/lib/document-content"
 
-export async function GET(request: NextRequest, { params }: { params: { slug: string } }) {
-  const { slug } = params
+export async function GET(request: NextRequest, { params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params
 
   // Get content for the document
   const content = documentContent[slug as keyof typeof documentContent]

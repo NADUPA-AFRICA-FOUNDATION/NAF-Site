@@ -1,4 +1,4 @@
-import { VolunteerApplicationForm } from "@/components/volunteer-application-form"
+import { VolunteerForm } from "@/components/volunteer-form"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { ArrowLeft } from "lucide-react"
@@ -91,7 +91,7 @@ export default function VolunteerPage() {
                 Ready to make a difference? Fill out our application form and we'll get back to you soon.
               </p>
             </div>
-            <VolunteerApplicationForm />
+            <VolunteerForm />
 
             {/* Back Button at Bottom */}
             <div className="mt-8 text-center">

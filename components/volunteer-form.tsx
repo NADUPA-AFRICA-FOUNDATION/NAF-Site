@@ -12,6 +12,7 @@ import { Toaster } from "@/components/ui/toaster"
 import { CheckCircle2, Loader2, AlertCircle, Database, ExternalLink, Copy } from "lucide-react"
 import { submitVolunteerForm } from "@/app/actions/volunteer"
 import { Card, CardContent } from "@/components/ui/card"
+import { TermsModal } from "@/components/terms-modal"
 
 export function VolunteerForm() {
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -412,7 +413,8 @@ export function VolunteerForm() {
                 I agree to the terms and conditions <span className="text-red-500">*</span>
               </label>
               <p className="text-sm text-stone-500 mt-1">
-                By checking this box, you agree to our volunteer policies, code of conduct, and privacy policy.
+                By checking this box, you agree to our volunteer policies, code of conduct, and privacy policy. Read
+                the <TermsModal />.
               </p>
             </div>
           </div>

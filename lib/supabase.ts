@@ -46,13 +46,26 @@ export const supabase = (() => {
   return supabaseInstance
 })()
 
-// Server-side client with service role key for admin operations (singleton)
+// Server-side client with service role key for admin operations (singleton).
+// If SUPABASE_SERVICE_ROLE_KEY is missing, any use throws a clear configuration
+// error instead of silently falling back to the anon key (which would fail RLS
+// checks with confusing "database error" messages).
 export const supabaseAdmin = (() => {
-  // Use service role key if available, otherwise fall back to anon key
-  const adminKey = supabaseServiceKey || supabaseAnonKey
+  if (!supabaseServiceKey) {
+    console.error(
+      "SUPABASE_SERVICE_ROLE_KEY is not set - admin database operations (contact/volunteer/donation saves, document management) will fail until it is configured",
+    )
+    return new Proxy({} as ReturnType<typeof createClient>, {
+      get() {
+        throw new Error(
+          "SUPABASE_SERVICE_ROLE_KEY is not set - configure it in your environment to enable admin database operations",
+        )
+      },
+    })
+  }
 
   if (!supabaseAdminInstance) {
-    supabaseAdminInstance = createClient(supabaseUrl, adminKey, {
+    supabaseAdminInstance = createClient(supabaseUrl, supabaseServiceKey, {
       auth: {
         autoRefreshToken: false,
         persistSession: false,

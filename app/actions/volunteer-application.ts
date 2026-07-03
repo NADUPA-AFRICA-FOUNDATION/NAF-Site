@@ -1,7 +1,7 @@
 "use server"
 
 import { supabaseAdmin } from "@/lib/supabase"
-import { sendEmail } from "@/lib/email"
+import { sendEmail, escapeHtml } from "@/lib/email"
 import { validateVolunteerApplication, type VolunteerApplicationData } from "@/lib/volunteer-validation"
 
 export async function submitVolunteerApplication(formData: FormData) {
@@ -98,7 +98,7 @@ export async function submitVolunteerApplication(formData: FormData) {
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
             <h2 style="color: #059669;">Thank You for Your Volunteer Application!</h2>
-            <p>Dear ${applicationData.firstName} ${applicationData.lastName},</p>
+            <p>Dear ${escapeHtml(applicationData.firstName)} ${escapeHtml(applicationData.lastName)},</p>
             <p>Thank you for your interest in volunteering with NADUPA AFRICA FOUNDATION. We have received your application and will review it carefully.</p>
             
             <div style="background-color: #f0f9ff; padding: 20px; border-radius: 8px; margin: 20px 0;">
@@ -134,25 +134,25 @@ export async function submitVolunteerApplication(formData: FormData) {
             
             <div style="background-color: #f9f9f9; padding: 20px; border-radius: 8px; margin: 20px 0;">
               <h3>Personal Information</h3>
-              <p><strong>Name:</strong> ${applicationData.firstName} ${applicationData.lastName}</p>
-              <p><strong>Email:</strong> ${applicationData.email}</p>
-              <p><strong>Phone:</strong> ${applicationData.phone}</p>
-              <p><strong>Date of Birth:</strong> ${applicationData.dateOfBirth}</p>
-              <p><strong>Nationality:</strong> ${applicationData.nationality}</p>
-              <p><strong>Location:</strong> ${applicationData.city}, ${applicationData.country}</p>
+              <p><strong>Name:</strong> ${escapeHtml(applicationData.firstName)} ${escapeHtml(applicationData.lastName)}</p>
+              <p><strong>Email:</strong> ${escapeHtml(applicationData.email)}</p>
+              <p><strong>Phone:</strong> ${escapeHtml(applicationData.phone)}</p>
+              <p><strong>Date of Birth:</strong> ${escapeHtml(applicationData.dateOfBirth)}</p>
+              <p><strong>Nationality:</strong> ${escapeHtml(applicationData.nationality)}</p>
+              <p><strong>Location:</strong> ${escapeHtml(applicationData.city)}, ${escapeHtml(applicationData.country)}</p>
             </div>
-            
+
             <div style="background-color: #f0f9ff; padding: 20px; border-radius: 8px; margin: 20px 0;">
               <h3>Volunteer Preferences</h3>
-              <p><strong>Availability:</strong> ${applicationData.availability}</p>
-              <p><strong>Duration:</strong> ${applicationData.duration}</p>
-              <p><strong>Areas of Interest:</strong> ${applicationData.areasOfInterest.join(", ")}</p>
-              <p><strong>Skills:</strong> ${applicationData.skills}</p>
+              <p><strong>Availability:</strong> ${escapeHtml(applicationData.availability)}</p>
+              <p><strong>Duration:</strong> ${escapeHtml(applicationData.duration)}</p>
+              <p><strong>Areas of Interest:</strong> ${escapeHtml(applicationData.areasOfInterest.join(", "))}</p>
+              <p><strong>Skills:</strong> ${escapeHtml(applicationData.skills)}</p>
             </div>
-            
+
             <div style="background-color: #fef3c7; padding: 20px; border-radius: 8px; margin: 20px 0;">
               <h3>Motivation</h3>
-              <p>${applicationData.motivation}</p>
+              <p>${escapeHtml(applicationData.motivation)}</p>
             </div>
             
             <p style="color: #666; font-size: 12px;">
