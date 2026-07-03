@@ -14,6 +14,17 @@ export interface EmailTemplate {
   from?: string
 }
 
+// Escape user-supplied values before interpolating them into HTML email bodies,
+// so a submitter cannot inject markup into the emails we send.
+export function escapeHtml(value: unknown): string {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;")
+}
+
 export class EmailService {
   private static readonly FROM_EMAIL = "NADUPA AFRICA FOUNDATION <info@nadupaafricafoundation.org>"
   private static readonly ADMIN_EMAIL = "info@nadupaafricafoundation.org"
@@ -126,6 +137,12 @@ export class EmailService {
     subject: string
     submittedAt: string
   }) {
+    data = {
+      ...data,
+      firstName: escapeHtml(data.firstName),
+      lastName: escapeHtml(data.lastName),
+      subject: escapeHtml(data.subject),
+    }
     return `
       <!DOCTYPE html>
       <html>
@@ -194,6 +211,15 @@ export class EmailService {
     message: string
     submittedAt: string
   }) {
+    data = {
+      ...data,
+      firstName: escapeHtml(data.firstName),
+      lastName: escapeHtml(data.lastName),
+      email: escapeHtml(data.email),
+      phone: data.phone ? escapeHtml(data.phone) : data.phone,
+      subject: escapeHtml(data.subject),
+      message: escapeHtml(data.message),
+    }
     return `
       <!DOCTYPE html>
       <html>
@@ -269,6 +295,12 @@ export class EmailService {
     areaOfInterest: string[]
     submittedAt: string
   }) {
+    data = {
+      ...data,
+      firstName: escapeHtml(data.firstName),
+      lastName: escapeHtml(data.lastName),
+      areaOfInterest: data.areaOfInterest.map(escapeHtml),
+    }
     return `
       <!DOCTYPE html>
       <html>
@@ -353,6 +385,16 @@ export class EmailService {
     availability: string[]
     submittedAt: string
   }) {
+    data = {
+      ...data,
+      firstName: escapeHtml(data.firstName),
+      lastName: escapeHtml(data.lastName),
+      email: escapeHtml(data.email),
+      phone: data.phone ? escapeHtml(data.phone) : data.phone,
+      motivation: escapeHtml(data.motivation),
+      areaOfInterest: data.areaOfInterest.map(escapeHtml),
+      availability: data.availability.map(escapeHtml),
+    }
     return `
       <!DOCTYPE html>
       <html>
@@ -439,6 +481,11 @@ export class EmailService {
     paymentMethod: string
     submittedAt: string
   }) {
+    data = {
+      ...data,
+      fullName: escapeHtml(data.fullName),
+      paymentMethod: escapeHtml(data.paymentMethod),
+    }
     return `
       <!DOCTYPE html>
       <html>
@@ -509,6 +556,12 @@ export class EmailService {
     paymentMethod: string
     submittedAt: string
   }) {
+    data = {
+      ...data,
+      fullName: escapeHtml(data.fullName),
+      email: escapeHtml(data.email),
+      paymentMethod: escapeHtml(data.paymentMethod),
+    }
     return `
       <!DOCTYPE html>
       <html>

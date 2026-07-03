@@ -104,7 +104,7 @@ export async function submitVolunteerForm(formData: FormData) {
     }
 
     // Try different insert strategies, starting with the most complete
-    const strategies = [
+    const strategies: { name: string; data: Record<string, unknown> }[] = [
       // Strategy 1: Full insert with all columns
       {
         name: "full",
@@ -265,7 +265,7 @@ export async function submitVolunteerForm(formData: FormData) {
 
     if (error instanceof ZodError) {
       // Get the first validation error
-      const firstError = error.errors[0]
+      const firstError = error.issues[0]
       return {
         success: false,
         message: firstError.message,

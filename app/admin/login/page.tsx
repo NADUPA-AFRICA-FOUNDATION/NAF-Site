@@ -10,7 +10,6 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Lock, Mail, Shield, Eye, EyeOff, AlertCircle } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
-import { signInSimpleAdmin, checkSimpleAdminAuth } from "@/lib/simple-auth"
 
 export default function AdminLoginPage() {
   const [email, setEmail] = useState("")
@@ -23,10 +22,15 @@ export default function AdminLoginPage() {
 
   // Check if already logged in
   useEffect(() => {
-    const { user } = checkSimpleAdminAuth()
-    if (user) {
-      router.push("/admin/documents")
-    }
+    fetch("/api/admin/session")
+      .then((res) => {
+        if (res.ok) {
+          router.push("/admin/documents")
+        }
+      })
+      .catch(() => {
+        // Not logged in - stay on the login page
+      })
   }, [router])
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -46,34 +50,32 @@ export default function AdminLoginPage() {
     setLoading(true)
 
     try {
-      // For debugging
-      console.log("Attempting login with:", { email })
+      const response = await fetch("/api/admin/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      })
 
-      const { user, error } = signInSimpleAdmin(email, password)
+      const result = await response.json()
 
-      if (error) {
-        setLoginStatus(`Login failed: ${error}`)
+      if (!response.ok) {
+        const message = result.error || "Login failed"
+        setLoginStatus(`Login failed: ${message}`)
         toast({
           title: "Login failed",
-          description: error,
+          description: message,
           variant: "destructive",
         })
         setLoading(false)
         return
       }
 
-      if (user) {
-        setLoginStatus("Login successful! Redirecting...")
-        toast({
-          title: "Login successful",
-          description: `Welcome back, ${user.email}`,
-        })
-
-        // Small delay to ensure localStorage is updated
-        setTimeout(() => {
-          router.push("/admin/documents")
-        }, 500)
-      }
+      setLoginStatus("Login successful! Redirecting...")
+      toast({
+        title: "Login successful",
+        description: `Welcome back, ${result.user.email}`,
+      })
+      router.push("/admin/documents")
     } catch (error) {
       console.error("Login error:", error)
       setLoginStatus(`Unexpected error: ${error}`)
@@ -169,8 +171,7 @@ export default function AdminLoginPage() {
         </CardContent>
         <CardFooter className="text-xs text-center text-stone-400 border-t pt-4">
           <div className="w-full">
-            <p>Default admin: admin@nadupa.org</p>
-            <p className="mt-1">If you've forgotten your password, please contact the system administrator.</p>
+            <p>If you've forgotten your password, please contact the system administrator.</p>
           </div>
         </CardFooter>
       </Card>

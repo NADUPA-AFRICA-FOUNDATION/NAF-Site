@@ -1,8 +1,16 @@
 import { NextResponse } from "next/server"
 import { Resend } from "resend"
 import { createClient } from "@supabase/supabase-js"
+import { escapeHtml } from "@/lib/email"
 
-const resend = new Resend(process.env.RESEND_API_KEY)
+// Lazily created so the module can load (and the app can build) without RESEND_API_KEY;
+// emails are simply skipped when the key is missing.
+let resend: Resend | null = null
+function getResend(): Resend | null {
+  if (!process.env.RESEND_API_KEY) return null
+  if (!resend) resend = new Resend(process.env.RESEND_API_KEY)
+  return resend
+}
 
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
 
@@ -33,7 +41,16 @@ export async function POST(req: Request) {
 
     // 2. Send Email via Resend
     try {
-      await resend.emails.send({
+      const emailClient = getResend()
+      if (!emailClient) {
+        console.warn("RESEND_API_KEY not set - skipping contact form email notifications")
+        return NextResponse.json({
+          success: true,
+          warning: "Message saved but email notifications are not configured",
+        })
+      }
+
+      await emailClient.emails.send({
         from: "NADUPA Africa Foundation <noreply@nadupaafricafoundation.org>", // must be a verified domain in Resend
         to: "info@nadupaafricafoundation.org",
         subject: `New Contact Form: ${subject}`,
@@ -45,18 +62,18 @@ export async function POST(req: Request) {
             </div>
             
             <div style="padding: 30px; background: #f9fafb;">
-              <h3 style="color: #374151; margin-bottom: 20px;">Message from ${first_name} ${last_name}</h3>
-              
+              <h3 style="color: #374151; margin-bottom: 20px;">Message from ${escapeHtml(first_name)} ${escapeHtml(last_name)}</h3>
+
               <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 15px;">
-                <p style="margin: 5px 0;"><strong>Name:</strong> ${first_name} ${last_name}</p>
-                <p style="margin: 5px 0;"><strong>Email:</strong> <a href="mailto:${email}">${email}</a></p>
-                <p style="margin: 5px 0;"><strong>Phone:</strong> ${phone || "N/A"}</p>
-                <p style="margin: 5px 0;"><strong>Subject:</strong> ${subject}</p>
+                <p style="margin: 5px 0;"><strong>Name:</strong> ${escapeHtml(first_name)} ${escapeHtml(last_name)}</p>
+                <p style="margin: 5px 0;"><strong>Email:</strong> <a href="mailto:${escapeHtml(email)}">${escapeHtml(email)}</a></p>
+                <p style="margin: 5px 0;"><strong>Phone:</strong> ${escapeHtml(phone || "N/A")}</p>
+                <p style="margin: 5px 0;"><strong>Subject:</strong> ${escapeHtml(subject)}</p>
               </div>
-              
+
               <div style="background: white; padding: 20px; border-radius: 8px;">
                 <p style="margin: 0 0 10px 0;"><strong>Message:</strong></p>
-                <p style="margin: 0; white-space: pre-wrap;">${message}</p>
+                <p style="margin: 0; white-space: pre-wrap;">${escapeHtml(message)}</p>
               </div>
               
               <div style="margin-top: 20px; padding: 15px; background: #ecfdf5; border-left: 4px solid #059669;">
@@ -73,7 +90,7 @@ export async function POST(req: Request) {
       })
 
       // Send confirmation email to user
-      await resend.emails.send({
+      await emailClient.emails.send({
         from: "NADUPA Africa Foundation <noreply@nadupaafricafoundation.org>",
         to: email,
         subject: "Thank you for contacting NADUPA Africa Foundation",
@@ -85,9 +102,9 @@ export async function POST(req: Request) {
             </div>
             
             <div style="padding: 30px; background: #f9fafb;">
-              <p>Dear ${first_name} ${last_name},</p>
-              
-              <p>Thank you for reaching out to NADUPA Africa Foundation. We have received your message regarding "<strong>${subject}</strong>" and appreciate your interest in our work.</p>
+              <p>Dear ${escapeHtml(first_name)} ${escapeHtml(last_name)},</p>
+
+              <p>Thank you for reaching out to NADUPA Africa Foundation. We have received your message regarding "<strong>${escapeHtml(subject)}</strong>" and appreciate your interest in our work.</p>
               
               <div style="background: #ecfdf5; padding: 15px; border-left: 4px solid #059669; margin: 20px 0;">
                 <p style="margin: 0 0 10px 0;"><strong>What happens next?</strong></p>
