@@ -1,7 +1,9 @@
 // Server-side admin session management.
 // Credentials and the session-signing secret live in environment variables:
 //   ADMIN_EMAIL          - email address allowed to sign in
-//   ADMIN_PASSWORD       - password for that account
+//   ADMIN_PASSWORD_HASH  - scrypt hash of the password (preferred; generate
+//                          with: node scripts/hash-admin-password.mjs)
+//   ADMIN_PASSWORD       - plaintext password (fallback if no hash is set)
 //   ADMIN_SESSION_SECRET - random secret used to sign session tokens (32+ chars)
 // This module uses Node's crypto and must only be imported from server code
 // (API routes, server actions) - never from client components.
@@ -16,7 +18,11 @@ export interface AdminSession {
 }
 
 export function isAdminAuthConfigured(): boolean {
-  return Boolean(process.env.ADMIN_EMAIL && process.env.ADMIN_PASSWORD && process.env.ADMIN_SESSION_SECRET)
+  return Boolean(
+    process.env.ADMIN_EMAIL &&
+      (process.env.ADMIN_PASSWORD_HASH || process.env.ADMIN_PASSWORD) &&
+      process.env.ADMIN_SESSION_SECRET,
+  )
 }
 
 // Constant-time string comparison (hashes both sides first so lengths match)
@@ -26,20 +32,51 @@ function safeEqual(a: string, b: string): boolean {
   return crypto.timingSafeEqual(hashA, hashB)
 }
 
+// Stored format: scrypt:<salt_hex>:<key_hex> (see scripts/hash-admin-password.mjs)
+function verifyScryptHash(password: string, stored: string): boolean {
+  const parts = stored.split(":")
+  if (parts.length !== 3 || parts[0] !== "scrypt") return false
+  try {
+    const salt = Buffer.from(parts[1], "hex")
+    const expected = Buffer.from(parts[2], "hex")
+    if (salt.length < 8 || expected.length !== 64) return false
+    const actual = crypto.scryptSync(password, salt, 64)
+    return crypto.timingSafeEqual(actual, expected)
+  } catch {
+    return false
+  }
+}
+
 export function verifyAdminCredentials(email: string, password: string): boolean {
   const adminEmail = process.env.ADMIN_EMAIL
-  const adminPassword = process.env.ADMIN_PASSWORD
-  if (!adminEmail || !adminPassword) return false
+  if (!adminEmail) return false
 
   const emailOk = safeEqual(email.trim().toLowerCase(), adminEmail.trim().toLowerCase())
-  const passwordOk = safeEqual(password, adminPassword)
+
+  const passwordHash = process.env.ADMIN_PASSWORD_HASH
+  let passwordOk = false
+  if (passwordHash) {
+    passwordOk = verifyScryptHash(password, passwordHash)
+  } else if (process.env.ADMIN_PASSWORD) {
+    passwordOk = safeEqual(password, process.env.ADMIN_PASSWORD)
+  }
+
   return emailOk && passwordOk
 }
 
-function sign(payload: string): string {
+// The signing key is derived from the session secret AND the current
+// credential material, so rotating the password (or the hash, or the secret)
+// immediately invalidates every outstanding session token.
+function signingKey(): Buffer {
   const secret = process.env.ADMIN_SESSION_SECRET
   if (!secret) throw new Error("ADMIN_SESSION_SECRET is not set")
-  return crypto.createHmac("sha256", secret).update(payload).digest("base64url")
+  const credentialMaterial = process.env.ADMIN_PASSWORD_HASH || process.env.ADMIN_PASSWORD || ""
+  const fingerprint = crypto.createHash("sha256").update(credentialMaterial).digest("hex")
+  return crypto.createHmac("sha256", secret).update(`admin-session-key:v1:${fingerprint}`).digest()
+}
+
+function sign(payload: string): string {
+  return crypto.createHmac("sha256", signingKey()).update(payload).digest("base64url")
 }
 
 export function createAdminSessionToken(email: string): string {
