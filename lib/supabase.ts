@@ -1,4 +1,8 @@
-import { createClient } from "@supabase/supabase-js"
+import { createClient, type SupabaseClient } from "@supabase/supabase-js"
+
+// No generated Database types yet, so use a loosely-typed client. Generate types with
+// `supabase gen types typescript` and swap `any` for the Database type to tighten this.
+type UntypedClient = SupabaseClient<any, "public", any>
 
 // Environment variables with better type safety and validation
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -17,14 +21,14 @@ if (!supabaseAnonKey) {
 }
 
 // Global singleton instances to prevent multiple GoTrueClient instances
-let supabaseInstance: ReturnType<typeof createClient> | null = null
-let supabaseAdminInstance: ReturnType<typeof createClient> | null = null
+let supabaseInstance: UntypedClient | null = null
+let supabaseAdminInstance: UntypedClient | null = null
 
 // Client-side client for public operations (singleton)
-export const supabase = (() => {
+export const supabase: UntypedClient = (() => {
   if (typeof window === "undefined") {
     // Server-side: create a new instance each time to avoid sharing state
-    return createClient(supabaseUrl, supabaseAnonKey, {
+    return createClient<any>(supabaseUrl, supabaseAnonKey, {
       auth: {
         autoRefreshToken: false,
         persistSession: false,
@@ -34,7 +38,7 @@ export const supabase = (() => {
 
   // Client-side: use singleton
   if (!supabaseInstance) {
-    supabaseInstance = createClient(supabaseUrl, supabaseAnonKey, {
+    supabaseInstance = createClient<any>(supabaseUrl, supabaseAnonKey, {
       auth: {
         autoRefreshToken: true,
         persistSession: true,
@@ -50,12 +54,12 @@ export const supabase = (() => {
 // If SUPABASE_SERVICE_ROLE_KEY is missing, any use throws a clear configuration
 // error instead of silently falling back to the anon key (which would fail RLS
 // checks with confusing "database error" messages).
-export const supabaseAdmin = (() => {
+export const supabaseAdmin: UntypedClient = (() => {
   if (!supabaseServiceKey) {
     console.error(
       "SUPABASE_SERVICE_ROLE_KEY is not set - admin database operations (contact/volunteer/donation saves, document management) will fail until it is configured",
     )
-    return new Proxy({} as ReturnType<typeof createClient>, {
+    return new Proxy({} as UntypedClient, {
       get() {
         throw new Error(
           "SUPABASE_SERVICE_ROLE_KEY is not set - configure it in your environment to enable admin database operations",
@@ -65,7 +69,7 @@ export const supabaseAdmin = (() => {
   }
 
   if (!supabaseAdminInstance) {
-    supabaseAdminInstance = createClient(supabaseUrl, supabaseServiceKey, {
+    supabaseAdminInstance = createClient<any>(supabaseUrl, supabaseServiceKey, {
       auth: {
         autoRefreshToken: false,
         persistSession: false,

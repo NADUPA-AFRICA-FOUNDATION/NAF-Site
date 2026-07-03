@@ -104,7 +104,7 @@ export async function submitDonationInterest(formData: FormData) {
 
     if (error instanceof ZodError) {
       // Get the first validation error
-      const firstError = error.errors[0]
+      const firstError = error.issues[0]
       return {
         success: false,
         message: firstError.message,
