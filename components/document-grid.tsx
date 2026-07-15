@@ -66,10 +66,26 @@ export function DocumentGrid({
     return matchesSearch && matchesCategory
   })
 
-  // Get column classes
+  // Tailwind only generates classes it can see statically, so the column
+  // counts must map to literal class names rather than template strings.
+  const tabletColsClass: Record<number, string> = {
+    1: "sm:grid-cols-1",
+    2: "sm:grid-cols-2",
+    3: "sm:grid-cols-3",
+    4: "sm:grid-cols-4",
+  }
+  const desktopColsClass: Record<number, string> = {
+    1: "lg:grid-cols-1",
+    2: "lg:grid-cols-2",
+    3: "lg:grid-cols-3",
+    4: "lg:grid-cols-4",
+  }
+
   const getColumnClasses = () => {
     if (view === "list") return "grid-cols-1"
-    return `grid-cols-1 sm:grid-cols-${columns.tablet} lg:grid-cols-${columns.desktop}`
+    const tablet = tabletColsClass[columns.tablet] || "sm:grid-cols-2"
+    const desktop = desktopColsClass[columns.desktop] || "lg:grid-cols-3"
+    return `grid-cols-1 ${tablet} ${desktop}`
   }
 
   return (

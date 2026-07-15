@@ -1,6 +1,15 @@
 import { type NextRequest, NextResponse } from "next/server"
+import { del } from "@vercel/blob"
 import { supabaseAdmin } from "@/lib/supabase"
 import { checkAdminAuth } from "@/lib/auth"
+
+function isVercelBlobUrl(url: string): boolean {
+  try {
+    return new URL(url).hostname.endsWith(".blob.vercel-storage.com")
+  } catch {
+    return false
+  }
+}
 
 export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -34,6 +43,16 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
     if (deleteError) {
       console.error("Error deleting document:", deleteError)
       return NextResponse.json({ error: `Failed to delete document: ${deleteError.message}` }, { status: 500 })
+    }
+
+    // Remove the file from Blob storage so deleted documents stop being
+    // publicly downloadable. Non-fatal: the database row is already gone.
+    if (document.file_url && isVercelBlobUrl(document.file_url) && process.env.BLOB_READ_WRITE_TOKEN) {
+      try {
+        await del(document.file_url)
+      } catch (blobError) {
+        console.error(`Blob cleanup failed for ${document.file_url}:`, blobError)
+      }
     }
 
     // Log admin action

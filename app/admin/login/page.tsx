@@ -56,10 +56,17 @@ export default function AdminLoginPage() {
         body: JSON.stringify({ email, password }),
       })
 
-      const result = await response.json()
+      // Platform errors (rate limiting, security checkpoints) can return
+      // HTML instead of JSON, so parse defensively.
+      let result: { error?: string; user?: { email: string } } = {}
+      try {
+        result = await response.json()
+      } catch {
+        result = {}
+      }
 
       if (!response.ok) {
-        const message = result.error || "Login failed"
+        const message = result.error || `Login failed (HTTP ${response.status})`
         setLoginStatus(`Login failed: ${message}`)
         toast({
           title: "Login failed",
@@ -73,7 +80,7 @@ export default function AdminLoginPage() {
       setLoginStatus("Login successful! Redirecting...")
       toast({
         title: "Login successful",
-        description: `Welcome back, ${result.user.email}`,
+        description: `Welcome back, ${result.user?.email || email}`,
       })
       router.push("/admin/documents")
     } catch (error) {

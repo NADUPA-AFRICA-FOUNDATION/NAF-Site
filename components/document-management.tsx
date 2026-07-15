@@ -11,7 +11,20 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 import { Upload, FileText, Trash2, Download, Eye, RefreshCw } from "lucide-react"
+import { upload } from "@vercel/blob/client"
 import { useToast } from "@/hooks/use-toast"
+
+// Reads the error message from an API response without assuming the body is
+// JSON - platform errors (413s, security checkpoints) return HTML pages.
+async function readErrorMessage(response: Response, fallback: string): Promise<string> {
+  try {
+    const data = await response.json()
+    if (data && typeof data.error === "string") return data.error
+  } catch {
+    // Non-JSON error body - fall through to the generic message
+  }
+  return `${fallback} (HTTP ${response.status})`
+}
 
 interface Document {
   id: string
@@ -66,11 +79,11 @@ export default function DocumentManagement() {
         const docs = await response.json()
         setDocuments(docs)
       } else {
-        const errorData = await response.json()
-        console.error("Failed to load documents:", errorData)
+        const message = await readErrorMessage(response, "Please refresh the page to try again.")
+        console.error("Failed to load documents:", message)
         toast({
           title: "Failed to load documents",
-          description: errorData.error || "Please refresh the page to try again.",
+          description: message,
           variant: "destructive",
         })
       }
@@ -90,66 +103,50 @@ export default function DocumentManagement() {
     const file = event.target.files?.[0]
     if (!file) return
 
+    // Always clear the input on validation failure: re-selecting the same
+    // file fires no change event if the input still holds its value, which
+    // would leave the upload silently stuck.
+    const rejectFile = (title: string, description: string) => {
+      event.target.value = ""
+      toast({ title, description, variant: "destructive" })
+    }
+
     // Validate form data
     if (!formData.title.trim()) {
-      toast({
-        title: "Missing title",
-        description: "Please enter a document title.",
-        variant: "destructive",
-      })
+      rejectFile("Missing title", "Please enter a document title, then choose the file again.")
       return
     }
 
     if (!formData.category) {
-      toast({
-        title: "Missing category",
-        description: "Please select a document category.",
-        variant: "destructive",
-      })
+      rejectFile("Missing category", "Please select a document category, then choose the file again.")
       return
     }
 
     if (file.type !== "application/pdf") {
-      toast({
-        title: "Invalid file type",
-        description: "Please upload a PDF file only.",
-        variant: "destructive",
-      })
+      rejectFile("Invalid file type", "Please upload a PDF file only.")
       return
     }
 
     if (file.size > 10 * 1024 * 1024) {
-      toast({
-        title: "File too large",
-        description: "Please upload a file smaller than 10MB.",
-        variant: "destructive",
-      })
+      rejectFile("File too large", "Please upload a file smaller than 10MB.")
       return
     }
 
     setUploading(true)
 
     try {
-      // Upload file to Vercel Blob
-      const uploadFormData = new FormData()
-      uploadFormData.append("file", file)
-
-      const uploadResponse = await fetch("/api/upload", {
-        method: "POST",
-        body: uploadFormData,
+      // Upload straight from the browser to Vercel Blob (via a token from
+      // /api/upload) so large PDFs are not blocked by the serverless body limit
+      const safeName = file.name.replace(/[^a-zA-Z0-9.-]/g, "_")
+      const blob = await upload(safeName, file, {
+        access: "public",
+        handleUploadUrl: "/api/upload",
       })
-
-      if (!uploadResponse.ok) {
-        const errorData = await uploadResponse.json()
-        throw new Error(errorData.error || "Upload failed")
-      }
-
-      const { url } = await uploadResponse.json()
 
       // Save document metadata to database
       const documentData = {
         ...formData,
-        file_url: url,
+        file_url: blob.url,
         file_size: `${(file.size / 1024 / 1024).toFixed(1)} MB`,
         file_type: "PDF",
       }
@@ -163,8 +160,7 @@ export default function DocumentManagement() {
       })
 
       if (!saveResponse.ok) {
-        const errorData = await saveResponse.json()
-        throw new Error(errorData.error || "Failed to save document")
+        throw new Error(await readErrorMessage(saveResponse, "Failed to save document"))
       }
 
       const savedDocument = await saveResponse.json()
@@ -209,8 +205,7 @@ export default function DocumentManagement() {
       })
 
       if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || "Failed to delete document")
+        throw new Error(await readErrorMessage(response, "Failed to delete document"))
       }
 
       setDocuments(documents.filter((doc) => doc.id !== documentId))
