@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useToast } from "@/hooks/use-toast"
-import { Loader2, Mail, Phone, RefreshCw } from "lucide-react"
+import { Loader2, Mail, Phone, RefreshCw, Trash2 } from "lucide-react"
 
 type Kind = "contact" | "donation" | "volunteer"
 type Status = "new" | "reviewed" | "archived"
@@ -98,6 +98,17 @@ export function AdminSubmissions() {
     setItems((prev) => prev.map((item) => (item._id === id ? { ...item, status } : item)))
   }
 
+  const deleteItem = async (item: Submission) => {
+    if (!confirm(`Permanently delete the submission from ${displayName(item)}? This cannot be undone.`)) return
+    const response = await fetch(`/api/admin/submissions?id=${encodeURIComponent(item._id)}`, { method: "DELETE" })
+    if (!response.ok) {
+      toast({ title: "Delete failed", description: "Please try again.", variant: "destructive" })
+      return
+    }
+    setItems((prev) => prev.filter((it) => it._id !== item._id))
+    toast({ title: "Deleted", description: "The submission was permanently deleted." })
+  }
+
   const visible = items.filter((item) => showArchived || item.status !== "archived")
   const newCount = items.filter((item) => item.status === "new").length
 
@@ -107,7 +118,7 @@ export function AdminSubmissions() {
         <div>
           <h1 className="text-2xl font-bold text-stone-800">Form submissions</h1>
           <p className="text-stone-600 text-sm">
-            {newCount} new {KIND_LABELS[kind].toLowerCase()}
+            Delete submissions once they are no longer needed, or when someone asks (Privacy Policy). {newCount} new {KIND_LABELS[kind].toLowerCase()}
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -200,6 +211,10 @@ export function AdminSubmissions() {
                       Archive
                     </Button>
                   )}
+                  <Button size="sm" variant="ghost" className="ml-auto text-red-600 hover:text-red-700" onClick={() => deleteItem(item)}>
+                    <Trash2 className="w-4 h-4" />
+                    Delete
+                  </Button>
                 </div>
               </CardContent>
             </Card>

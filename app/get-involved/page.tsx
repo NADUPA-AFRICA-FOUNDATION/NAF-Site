@@ -56,8 +56,14 @@ export default async function GetInvolvedPage() {
                   <Phone className="w-8 h-8 text-emerald-600 mb-4" />
                   <h4 className="font-semibold text-stone-800 mb-2">Mobile Money</h4>
                   <p className="text-stone-600 text-sm mb-3">Send donations via M-Pesa or other mobile money services:</p>
-                  <p className="text-stone-700 font-medium">Paybill: {c.donate.mpesaPaybill}</p>
-                  <p className="text-stone-700 font-medium">Account: {c.donate.mpesaAccount}</p>
+                  {/^\d+$/.test(c.donate.mpesaPaybill.trim()) ? (
+                    <>
+                      <p className="text-stone-700 font-medium">Paybill: {c.donate.mpesaPaybill}</p>
+                      <p className="text-stone-700 font-medium">Account: {c.donate.mpesaAccount}</p>
+                    </>
+                  ) : (
+                    <p className="text-stone-700 font-medium">{c.donate.mpesaPaybill}</p>
+                  )}
                 </CardContent>
               </Card>
               <Card className="border-stone-200">

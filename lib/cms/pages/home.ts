@@ -89,7 +89,6 @@ export const homePage = definePage({
       title: "Our Impact Across Kenya",
       text: "Every number represents a life touched, a community strengthened, and hope restored.",
       stats: [
-        { icon: "heart", value: "1,000+", label: "Lives Transformed" },
         { icon: "map-pin", value: "5", label: "Counties Served" },
         { icon: "users", value: "50+", label: "Programs Running" },
       ],

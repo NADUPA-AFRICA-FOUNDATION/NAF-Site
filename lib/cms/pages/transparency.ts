@@ -52,14 +52,14 @@ export const transparencyPage = definePage({
     },
     intro: {
       title: "Accountable to the communities we serve",
-      text: "We believe donors, partners, and communities deserve to see exactly how funds are used. Our financial records are audited annually, and we publish our reports here as they become available.",
+      text: "We believe donors, partners, and communities deserve to see exactly how funds are used. We publish our financial reports here as they become available, and you can request our financial records at any time.",
     },
     figures: [] as { value: string; label: string }[],
     reports: {
       title: "Financial Reports & Governance",
       text: "Audited statements, annual reports, and governance documents.",
       emptyText:
-        "We're preparing our latest financial reports for publication. In the meantime, contact us to request our audited statements.",
+        "We're preparing our latest financial reports for publication. In the meantime, contact us to request our financial statements.",
     },
   },
 })

@@ -65,8 +65,7 @@ export const donatePage = definePage({
     ],
     commitment: [
       { label: "Transparency", text: "We provide detailed reports on how funds are used and the impact they create." },
-      { label: "Efficiency", text: "85% of all donations go directly to our programs and the communities we serve." },
-      { label: "Accountability", text: "Our financial records are audited annually and available upon request." },
+      { label: "Accountability", text: "Our financial records are available on request, and reports are published on our Transparency page." },
     ],
     otherWays: [
       { label: "Monthly Giving", text: "Become a sustaining donor with a recurring monthly contribution." },
@@ -78,8 +77,6 @@ export const donatePage = definePage({
       title: "Together, We're Making a Difference",
       text: "Join our community of donors from across the globe who are helping to create sustainable change in Kenya.",
       stats: [
-        { value: "1,200+", label: "Monthly Donors" },
-        { value: "$350K", label: "Raised Last Year" },
         { value: "25+", label: "Communities Supported" },
       ],
     },

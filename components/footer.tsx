@@ -120,7 +120,7 @@ export async function Footer() {
 
             {s.registrationNumber && (
               <div className="mt-4 p-3 bg-stone-800 rounded-lg">
-                <p className="text-xs text-stone-400 mb-1">NGO Registration:</p>
+                <p className="text-xs text-stone-400 mb-1">Registration No.:</p>
                 <p className="text-sm font-mono text-emerald-400">{s.registrationNumber}</p>
               </div>
             )}
@@ -131,7 +131,9 @@ export async function Footer() {
         <div className="border-t border-stone-800 mt-8 pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
             <div className="text-center md:text-left">
-              <p className="text-stone-400 text-sm">{s.copyright}</p>
+              <p className="text-stone-400 text-sm">
+                © {new Date().getFullYear()} {s.orgName}. {s.copyright}
+              </p>
               <p className="text-stone-500 text-xs mt-1">{s.taxStatus}</p>
             </div>
             <div className="flex flex-wrap justify-center md:justify-end space-x-6 text-xs">
