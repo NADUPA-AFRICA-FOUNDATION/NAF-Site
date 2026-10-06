@@ -15,7 +15,7 @@ export async function checkAdminAuth(): Promise<{ user: AdminUser | null; error:
     if (!isAdminAuthConfigured()) {
       return {
         user: null,
-        error: "Admin features not configured - set ADMIN_EMAIL, ADMIN_PASSWORD and ADMIN_SESSION_SECRET",
+        error: "Admin features not configured - set ADMIN_EMAILS and ADMIN_SESSION_SECRET",
       }
     }
 

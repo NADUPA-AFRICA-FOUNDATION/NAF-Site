@@ -8,20 +8,31 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Lock, Mail, Shield, Eye, EyeOff, AlertCircle, KeyRound, Smartphone, Copy } from "lucide-react"
+import { Mail, Shield, AlertCircle, KeyRound, Smartphone, Copy, MailCheck } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 
-// password -> verify (2FA already set up)
-// password -> enroll (scan QR, confirm code) -> backupCodes
-type Step = "password" | "verify" | "enroll" | "backupCodes"
+// choose (Google, or email link -> linkSent) -> verify (2FA already set up)
+// choose -> enroll (scan QR, confirm code) -> backupCodes
+// Google and the email link both land back here with ?step=2fa.
+type Step = "choose" | "linkSent" | "loading" | "verify" | "enroll" | "backupCodes"
+
+function GoogleIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true">
+      <path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.4h6.5a5.6 5.6 0 0 1-2.4 3.6v3h3.9c2.2-2.1 3.5-5.1 3.5-8.7z" />
+      <path fill="#34A853" d="M12 24c3.2 0 6-1.1 7.9-2.9l-3.9-3c-1.1.7-2.4 1.2-4 1.2-3.1 0-5.7-2.1-6.6-4.9h-4v3.1A12 12 0 0 0 12 24z" />
+      <path fill="#FBBC05" d="M5.4 14.4a7.2 7.2 0 0 1 0-4.7V6.6h-4a12 12 0 0 0 0 10.8l4-3z" />
+      <path fill="#EA4335" d="M12 4.8c1.7 0 3.3.6 4.5 1.8l3.4-3.4A12 12 0 0 0 1.4 6.6l4 3.1C6.3 6.9 8.9 4.8 12 4.8z" />
+    </svg>
+  )
+}
 
 const ADMIN_HOME = "/admin/submissions"
 
 export default function AdminLoginPage() {
-  const [step, setStep] = useState<Step>("password")
+  const [step, setStep] = useState<Step>("loading")
   const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [showPassword, setShowPassword] = useState(false)
+  const [googleEnabled, setGoogleEnabled] = useState(false)
   const [code, setCode] = useState("")
   const [useBackupCode, setUseBackupCode] = useState(false)
   const [enrollment, setEnrollment] = useState<{ qrCode: string; manualKey: string } | null>(null)
@@ -31,14 +42,45 @@ export default function AdminLoginPage() {
   const router = useRouter()
   const { toast } = useToast()
 
-  // Already signed in (password + 2FA) - skip the login page
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const urlError = params.get("error")
+    const returningFor2fa = params.get("step") === "2fa"
+    window.history.replaceState(null, "", "/admin/login")
+
+    fetch("/api/admin/options")
+      .then((res) => res.json())
+      .then((options) => setGoogleEnabled(Boolean(options.google)))
+      .catch(() => {})
+
+    if (urlError) setError(urlError)
+
+    if (returningFor2fa) {
+      // Step 1 (Google or email link) is done - ask for the authenticator code
+      fetch("/api/admin/2fa/status")
+        .then(async (res) => {
+          const result = await res.json()
+          if (!res.ok) throw new Error(result.error || "Your sign-in expired. Please sign in again.")
+          setEmail(result.email)
+          if (result.next === "enroll") await startEnrollment()
+          else setStep("verify")
+        })
+        .catch((err) => {
+          setError(err instanceof Error ? err.message : "Sign-in failed")
+          setStep("choose")
+        })
+      return
+    }
+
+    // Already fully signed in - skip the login page
     fetch("/api/admin/session")
       .then((res) => {
         if (res.ok) router.push(ADMIN_HOME)
+        else setStep("choose")
       })
-      .catch(() => {})
-  }, [router])
+      .catch(() => setStep("choose"))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const post = async (url: string, body?: unknown) => {
     const response = await fetch(url, {
@@ -48,9 +90,9 @@ export default function AdminLoginPage() {
     })
     const result = await response.json().catch(() => ({}))
     if (!response.ok) {
-      // An expired pending sign-in means starting over from the password step
-      if (response.status === 401 && step !== "password" && /expired/i.test(result.error ?? "")) {
-        setStep("password")
+      // An expired pending sign-in means starting over
+      if (response.status === 401 && /expired/i.test(result.error ?? "")) {
+        setStep("choose")
         setCode("")
       }
       throw new Error(result.error || "Something went wrong - please try again")
@@ -64,20 +106,15 @@ export default function AdminLoginPage() {
     setStep("enroll")
   }
 
-  const handlePassword = async (e: React.FormEvent) => {
+  const handleEmailLink = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
     setLoading(true)
     try {
-      const result = await post("/api/admin/login", { email, password })
-      setPassword("")
-      if (result.next === "enroll") {
-        await startEnrollment()
-      } else {
-        setStep("verify")
-      }
+      await post("/api/admin/email-link", { email })
+      setStep("linkSent")
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Login failed")
+      setError(err instanceof Error ? err.message : "Could not send the sign-in link")
     } finally {
       setLoading(false)
     }
@@ -163,7 +200,7 @@ export default function AdminLoginPage() {
             <Shield className="w-6 h-6 text-white" />
           </div>
           <CardTitle className="text-2xl font-bold text-stone-800">
-            {step === "password" && "Admin Login"}
+            {(step === "choose" || step === "loading" || step === "linkSent") && "Admin Login"}
             {step === "verify" && "Two-Factor Verification"}
             {step === "enroll" && "Set Up Two-Factor Authentication"}
             {step === "backupCodes" && "Save Your Backup Codes"}
@@ -171,53 +208,70 @@ export default function AdminLoginPage() {
           <p className="text-stone-600">NADUPA AFRICA FOUNDATION</p>
         </CardHeader>
         <CardContent>
-          {step === "password" && (
-            <form method="post" onSubmit={handlePassword} className="space-y-4">
-              <div>
-                <Label htmlFor="email">Email Address</Label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-3 h-4 w-4 text-stone-400" />
-                  <Input
-                    id="email"
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="admin@nadupa.org"
-                    className="pl-10"
-                    autoComplete="username"
-                    required
-                  />
-                </div>
-              </div>
+          {step === "loading" && (
+            <div className="flex justify-center py-8">
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-emerald-600"></div>
+            </div>
+          )}
 
-              <div>
-                <Label htmlFor="password">Password</Label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-3 h-4 w-4 text-stone-400" />
-                  <Input
-                    id="password"
-                    type={showPassword ? "text" : "password"}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Enter your password"
-                    className="pl-10 pr-10"
-                    autoComplete="current-password"
-                    required
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-3 text-stone-400 hover:text-stone-600"
-                    aria-label={showPassword ? "Hide password" : "Show password"}
-                  >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
+          {step === "choose" && (
+            <div className="space-y-5">
+              {googleEnabled && (
+                <>
+                  <Button asChild variant="outline" className="w-full">
+                    <a href="/api/admin/google/start">
+                      <GoogleIcon />
+                      Sign in with Google
+                    </a>
+                  </Button>
+                  <div className="flex items-center gap-3 text-xs text-stone-400">
+                    <div className="h-px flex-1 bg-stone-200" />
+                    or
+                    <div className="h-px flex-1 bg-stone-200" />
+                  </div>
+                </>
+              )}
+              <form method="post" onSubmit={handleEmailLink} className="space-y-4">
+                <div>
+                  <Label htmlFor="email">Email a sign-in link</Label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-3 h-4 w-4 text-stone-400" />
+                    <Input
+                      id="email"
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="you@nadupaafricafoundation.org"
+                      className="pl-10"
+                      autoComplete="username"
+                      required
+                    />
+                  </div>
                 </div>
-              </div>
+                {errorBox}
+                {submitButton("Send sign-in link", "Sending...")}
+              </form>
+            </div>
+          )}
 
-              {errorBox}
-              {submitButton("Continue", "Checking...")}
-            </form>
+          {step === "linkSent" && (
+            <div className="space-y-4 text-center">
+              <MailCheck className="mx-auto h-10 w-10 text-emerald-600" />
+              <p className="text-sm text-stone-600">
+                If <strong>{email}</strong> is an admin address, a sign-in link is on its way. It expires in 15
+                minutes. Open it on this device to continue.
+              </p>
+              <button
+                type="button"
+                className="text-sm text-emerald-700 hover:underline"
+                onClick={() => {
+                  setStep("choose")
+                  setError(null)
+                }}
+              >
+                Use a different method
+              </button>
+            </div>
           )}
 
           {step === "verify" && (
@@ -295,7 +349,7 @@ export default function AdminLoginPage() {
         </CardContent>
         <CardFooter className="text-xs text-center text-stone-400 border-t pt-4">
           <div className="w-full">
-            <p>If you&apos;ve lost access to your password or authenticator, contact the system administrator.</p>
+            <p>If you&apos;ve lost access to your authenticator and backup codes, contact the system administrator.</p>
           </div>
         </CardFooter>
       </Card>
