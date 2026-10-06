@@ -100,7 +100,7 @@ export default function AdminLoginPage() {
           <p className="text-stone-600">NADUPA AFRICA FOUNDATION</p>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleLogin} className="space-y-4">
+          <form method="post" onSubmit={handleLogin} className="space-y-4">
             <div>
               <Label htmlFor="email">Email Address</Label>
               <div className="relative">

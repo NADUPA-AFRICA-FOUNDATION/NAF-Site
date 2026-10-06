@@ -89,7 +89,7 @@ export function DonationForm() {
 
   return (
     <>
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form method="post" onSubmit={handleSubmit} className="space-y-6">
         <div className="space-y-4">
           <div>
             <label htmlFor="fullName" className="block text-sm font-medium text-stone-700 mb-2">
