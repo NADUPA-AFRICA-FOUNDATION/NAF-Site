@@ -100,7 +100,7 @@ export const privacyPage = definePage({
       },
       {
         title: "Who We Share It With",
-        body: "Only our staff and authorised volunteers who need it can see your submissions. We use these service providers to run the website. They process data only on our instructions:\n\n- Vercel Inc. (USA): website hosting and server logs\n- Convex, Inc. (USA): secure database that stores form submissions\n- Resend (USA): sends form confirmation and notification emails\n- Supabase Inc.: stores our public document library (no visitor data)\n- Google LLC (USA): sign-in for our own administrators only\n\nWe may also disclose information where the law requires it, for example to a court or regulator.",
+        body: "Only our staff and authorised volunteers who need it can see your submissions. We use these service providers to run the website. They process data only on our instructions:\n\n- Vercel Inc. (USA): website hosting and server logs\n- Convex, Inc. (USA): secure database and file storage for form submissions, website content and our document library\n- Resend (USA): sends form confirmation and notification emails\n- Google LLC (USA): sign-in for our own administrators only\n\nWe may also disclose information where the law requires it, for example to a court or regulator.",
       },
       {
         title: "Transfers Outside Kenya",

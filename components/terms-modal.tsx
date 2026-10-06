@@ -6,7 +6,7 @@ import { useState } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { ExternalLink, FileText, Scale } from "lucide-react"
+import { ExternalLink, FileText, HandCoins, Lock, Scale, ShieldCheck } from "lucide-react"
 import Link from "next/link"
 
 interface TermsModalProps {
@@ -43,15 +43,18 @@ export function TermsModal({ trigger, children }: TermsModalProps) {
               </h3>
               <p className="text-emerald-700 text-sm">
                 By using our services, you agree to treat everyone with respect, follow our guidelines, and understand
-                that participation involves certain risks. Donations are non-refundable and will be used for our
-                mission. We protect your privacy and intellectual property rights.
+                that volunteering involves some risks. Donations are voluntary and support our mission. We handle your
+                personal data under Kenya&apos;s Data Protection Act, 2019.
               </p>
             </div>
 
             {/* Key Points */}
             <div className="space-y-4">
               <div>
-                <h4 className="font-semibold mb-2">🔒 Your Commitments:</h4>
+                <h4 className="font-semibold mb-2 flex items-center gap-2">
+                  <Lock className="w-4 h-4 text-emerald-600 motion-safe:animate-icon-bob" aria-hidden="true" />
+                  Your Commitments:
+                </h4>
                 <ul className="text-sm space-y-1 text-stone-600">
                   <li>• Treat all individuals with respect and dignity</li>
                   <li>• Follow our volunteer code of conduct</li>
@@ -61,32 +64,41 @@ export function TermsModal({ trigger, children }: TermsModalProps) {
               </div>
 
               <div>
-                <h4 className="font-semibold mb-2">💰 Donations:</h4>
+                <h4 className="font-semibold mb-2 flex items-center gap-2">
+                  <HandCoins className="w-4 h-4 text-emerald-600 motion-safe:animate-icon-sway" aria-hidden="true" />
+                  Donations:
+                </h4>
                 <ul className="text-sm space-y-1 text-stone-600">
-                  <li>• All donations are voluntary and generally non-refundable</li>
+                  <li>• This website does not take payments; we contact you to arrange your gift</li>
                   <li>• Funds support our mission and programs in Kenya</li>
-                  <li>• We maintain transparency in financial reporting</li>
-                  <li>• Tax receipts provided where applicable</li>
+                  <li>• Gifts made in error are refunded if you tell us within 30 days</li>
+                  <li>• Our tax-exempt status is pending</li>
                 </ul>
               </div>
 
               <div>
-                <h4 className="font-semibold mb-2">🛡️ Privacy & Safety:</h4>
+                <h4 className="font-semibold mb-2 flex items-center gap-2">
+                  <ShieldCheck className="w-4 h-4 text-emerald-600 motion-safe:animate-icon-beat" aria-hidden="true" />
+                  Privacy & Safety:
+                </h4>
                 <ul className="text-sm space-y-1 text-stone-600">
-                  <li>• Your personal information is protected and secure</li>
-                  <li>• We don't share data without your consent</li>
-                  <li>• Volunteer activities involve inherent risks</li>
-                  <li>• Insurance coverage is your responsibility</li>
+                  <li>• We use your details only for the purpose you gave them</li>
+                  <li>• We share them only with the service providers that run this site, or where the law requires</li>
+                  <li>• Volunteer activities involve some risks</li>
+                  <li>• Volunteers arrange their own travel and health insurance</li>
                 </ul>
               </div>
 
               <div>
-                <h4 className="font-semibold mb-2">⚖️ Legal Framework:</h4>
+                <h4 className="font-semibold mb-2 flex items-center gap-2">
+                  <Scale className="w-4 h-4 text-emerald-600 motion-safe:animate-icon-sway" aria-hidden="true" />
+                  Legal Framework:
+                </h4>
                 <ul className="text-sm space-y-1 text-stone-600">
                   <li>• Governed by the laws of the Republic of Kenya</li>
-                  <li>• Disputes resolved through Kenyan legal system</li>
-                  <li>• Terms may be updated with notice</li>
-                  <li>• Continued use implies acceptance of changes</li>
+                  <li>• Disputes are resolved under the Kenyan legal system</li>
+                  <li>• We may update these terms; the current version is always on our website</li>
+                  <li>• Nothing limits your rights under the Consumer Protection Act, 2012</li>
                 </ul>
               </div>
             </div>

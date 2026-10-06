@@ -1,75 +1,41 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { supabaseAdmin } from "@/lib/supabase"
+import { api } from "@/convex/_generated/api"
+import type { Id } from "@/convex/_generated/dataModel"
 import { checkAdminAuth } from "@/lib/auth"
+import { getConvex, serverSecret } from "@/lib/convex-server"
+import { toDocumentJson } from "@/lib/documents"
 
-export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+type Params = { params: Promise<{ id: string }> }
+
+export async function DELETE(_request: NextRequest, { params }: Params) {
+  const { user } = await checkAdminAuth()
+  if (!user) return NextResponse.json({ error: "Unauthorized - admin access required" }, { status: 401 })
+  const { id } = await params
+
   try {
-    // Check admin authentication
-    const { user, error: authError } = await checkAdminAuth()
-    if (authError || !user) {
-      return NextResponse.json({ error: "Unauthorized - admin access required" }, { status: 401 })
-    }
-
-    const { id } = await params
-
-    if (!id) {
-      return NextResponse.json({ error: "Document ID is required" }, { status: 400 })
-    }
-
-    // First get the document to get the file URL for cleanup
-    const { data: document, error: fetchError } = await supabaseAdmin
-      .from("resources")
-      .select("file_url, title")
-      .eq("id", id)
-      .single()
-
-    if (fetchError) {
-      console.error("Error fetching document:", fetchError)
-      return NextResponse.json({ error: "Document not found" }, { status: 404 })
-    }
-
-    // Delete from database
-    const { error: deleteError } = await supabaseAdmin.from("resources").delete().eq("id", id)
-
-    if (deleteError) {
-      console.error("Error deleting document:", deleteError)
-      return NextResponse.json({ error: `Failed to delete document: ${deleteError.message}` }, { status: 500 })
-    }
-
-    // Log admin action
-    console.log(`Admin ${user.email} deleted document: ${document.title}`)
-
+    const convex = getConvex()
+    const doc = await convex.query(api.documents.get, { secret: serverSecret(), id })
+    if (!doc) return NextResponse.json({ error: "Document not found" }, { status: 404 })
+    await convex.mutation(api.documents.remove, { secret: serverSecret(), id: doc.id as Id<"documents"> })
+    console.log(`Admin ${user.email} deleted document: ${doc.title}`)
     return NextResponse.json({ success: true, message: "Document deleted successfully" })
   } catch (error) {
-    console.error("API error:", error)
+    console.error("Delete document error:", error)
     return NextResponse.json({ error: "Failed to delete document" }, { status: 500 })
   }
 }
 
-export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(_request: NextRequest, { params }: Params) {
+  const { user } = await checkAdminAuth()
+  if (!user) return NextResponse.json({ error: "Unauthorized - admin access required" }, { status: 401 })
+  const { id } = await params
+
   try {
-    // Check admin authentication
-    const { user, error: authError } = await checkAdminAuth()
-    if (authError || !user) {
-      return NextResponse.json({ error: "Unauthorized - admin access required" }, { status: 401 })
-    }
-
-    const { id } = await params
-
-    if (!id) {
-      return NextResponse.json({ error: "Document ID is required" }, { status: 400 })
-    }
-
-    const { data: document, error } = await supabaseAdmin.from("resources").select("*").eq("id", id).single()
-
-    if (error) {
-      console.error("Supabase select error:", error)
-      return NextResponse.json({ error: `Database error: ${error.message}` }, { status: 500 })
-    }
-
-    return NextResponse.json(document)
+    const doc = await getConvex().query(api.documents.get, { secret: serverSecret(), id })
+    if (!doc) return NextResponse.json({ error: "Document not found" }, { status: 404 })
+    return NextResponse.json(toDocumentJson(doc))
   } catch (error) {
-    console.error("API error:", error)
+    console.error("Get document error:", error)
     return NextResponse.json({ error: "Failed to fetch document" }, { status: 500 })
   }
 }

@@ -1,23 +1,14 @@
 import { NextResponse } from "next/server"
-import { supabaseAdmin } from "@/lib/supabase"
+import { api } from "@/convex/_generated/api"
+import { getConvex, serverSecret } from "@/lib/convex-server"
+import { toDocumentJson } from "@/lib/documents"
 
-// Public listing of published documents for the resources page.
-// Read-only: only exposes display fields, never internal columns.
+// Public listing of published documents for the Resources and Transparency pages.
 export async function GET() {
   try {
-    const { data, error } = await supabaseAdmin
-      .from("resources")
-      .select("id, title, description, category, file_url, file_size, file_type, is_featured, created_at")
-      .order("is_featured", { ascending: false })
-      .order("created_at", { ascending: false })
-
-    if (error) {
-      console.error("Resources fetch error:", error)
-      return NextResponse.json({ error: "Failed to load resources" }, { status: 500 })
-    }
-
-    return NextResponse.json(data || [], {
-      headers: { "Cache-Control": "public, max-age=0, s-maxage=300, stale-while-revalidate=600" },
+    const docs = await getConvex().query(api.documents.list, { secret: serverSecret() })
+    return NextResponse.json(docs.map(toDocumentJson), {
+      headers: { "Cache-Control": "public, max-age=0, s-maxage=60, stale-while-revalidate=300" },
     })
   } catch (error) {
     console.error("Resources API error:", error)

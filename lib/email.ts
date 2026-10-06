@@ -243,7 +243,7 @@ export class EmailService {
         </head>
         <body>
           <div class="header">
-            <h1>🔔 New Contact Form Submission</h1>
+            <h1>New Contact Form Submission</h1>
             <p>NADUPA AFRICA FOUNDATION Admin Panel</p>
           </div>
           
@@ -324,7 +324,7 @@ export class EmailService {
         </head>
         <body>
           <div class="header">
-            <h1>🙌 Welcome to Our Volunteer Community!</h1>
+            <h1>Welcome to Our Volunteer Community!</h1>
             <p>NADUPA AFRICA FOUNDATION</p>
           </div>
           
@@ -336,9 +336,9 @@ export class EmailService {
             <div class="highlight">
               <p><strong>Your Application Status:</strong></p>
               <ul>
-                <li>✅ Application received and logged</li>
-                <li>🔍 Under review by our volunteer coordinator</li>
-                <li>📞 You'll hear from us within 5-7 business days</li>
+                <li>Application received and logged</li>
+                <li>Under review by our volunteer coordinator</li>
+                <li>You'll hear from us within 5-7 business days</li>
               </ul>
             </div>
             
@@ -508,7 +508,7 @@ export class EmailService {
         </head>
         <body>
           <div class="header">
-            <h1>❤️ Thank You for Your Generosity!</h1>
+            <h1>Thank You for Your Generosity!</h1>
             <p>NADUPA AFRICA FOUNDATION</p>
           </div>
           
@@ -585,7 +585,7 @@ export class EmailService {
         </head>
         <body>
           <div class="header">
-            <h1>💰 New Donation Interest</h1>
+            <h1>New Donation Interest</h1>
             <p>NADUPA AFRICA FOUNDATION Admin Panel</p>
           </div>
           

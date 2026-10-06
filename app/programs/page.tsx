@@ -26,7 +26,7 @@ export default async function ProgramsPage() {
                 <Card key={index} className="overflow-hidden border-stone-200 hover:shadow-xl transition-shadow duration-300">
                   <div className={`grid lg:grid-cols-2 gap-0 ${index % 2 === 1 ? "lg:grid-flow-col-dense" : ""}`}>
                     <div className={`relative h-64 lg:h-auto ${index % 2 === 1 ? "lg:col-start-2" : ""}`}>
-                      <Image src={program.image || "/placeholder.svg"} alt={`${program.title} program`} fill className="object-cover" />
+                      <Image src={program.image || "/placeholder.svg"} alt={`${program.title} program`} fill className="object-cover" sizes="(max-width: 1024px) 100vw, 50vw" />
                       <div className="absolute inset-0 bg-gradient-to-r from-emerald-900/40 to-transparent"></div>
                     </div>
 
