@@ -27,7 +27,7 @@ function GoogleIcon() {
   )
 }
 
-const ADMIN_HOME = "/admin/submissions"
+const ADMIN_HOME = "/admin/pages"
 
 export default function AdminLoginPage() {
   const [step, setStep] = useState<Step>("loading")

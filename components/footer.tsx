@@ -1,20 +1,20 @@
 import Link from "next/link"
 import Image from "next/image"
-import {
-  Mail,
-  Phone,
-  MapPin,
-  Facebook,
-  Twitter,
-  Instagram,
-  Linkedin,
-  Heart,
-  Users,
-  Droplets,
-  GraduationCap,
-} from "lucide-react"
+import { Mail, Phone, MapPin, Facebook, Twitter, Instagram, Linkedin, Users } from "lucide-react"
+import { getContent } from "@/lib/cms/content"
+import { getIcon } from "@/lib/cms/icons"
 
-export function Footer() {
+const IMPACT_COLORS = ["text-blue-400", "text-green-400", "text-red-400", "text-purple-400", "text-amber-400"]
+
+export async function Footer() {
+  const s = await getContent("settings")
+  const socials = [
+    { href: s.social.facebook, icon: Facebook, label: "Follow us on Facebook" },
+    { href: s.social.twitter, icon: Twitter, label: "Follow us on X / Twitter" },
+    { href: s.social.instagram, icon: Instagram, label: "Follow us on Instagram" },
+    { href: s.social.linkedin, icon: Linkedin, label: "Connect with us on LinkedIn" },
+  ].filter((social) => social.href)
+
   return (
     <footer className="bg-stone-900 text-white">
       <div className="container mx-auto px-4 py-12">
@@ -22,59 +22,26 @@ export function Footer() {
           {/* Organization Info */}
           <div className="space-y-4">
             <div className="flex items-center space-x-3">
-              <Image
-                src="/images/nadupa-logo.png"
-                alt="NADUPA AFRICA FOUNDATION Logo"
-                width={40}
-                height={40}
-                className="rounded-lg"
-              />
+              <Image src="/images/nadupa-logo.png" alt={`${s.orgName} Logo`} width={40} height={40} className="rounded-lg" />
               <div>
-                <h3 className="text-lg font-bold">NADUPA AFRICA FOUNDATION</h3>
-                <p className="text-sm text-stone-400">Empowering Communities</p>
+                <h3 className="text-lg font-bold">{s.orgName}</h3>
+                <p className="text-sm text-stone-400">{s.tagline}</p>
               </div>
             </div>
-            <p className="text-stone-300 text-sm leading-relaxed">
-              Dedicated to transforming lives and empowering communities across Kenya through sustainable development,
-              education, healthcare, and environmental conservation initiatives.
-            </p>
+            <p className="text-stone-300 text-sm leading-relaxed">{s.about}</p>
             <div className="flex space-x-4">
-              <a
-                href="https://facebook.com/nadupaafricafoundation"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-stone-400 hover:text-white transition-colors"
-                aria-label="Follow us on Facebook"
-              >
-                <Facebook className="w-5 h-5" />
-              </a>
-              <a
-                href="https://twitter.com/nadupafrica"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-stone-400 hover:text-white transition-colors"
-                aria-label="Follow us on Twitter"
-              >
-                <Twitter className="w-5 h-5" />
-              </a>
-              <a
-                href="https://instagram.com/nadupaafricafoundation"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-stone-400 hover:text-white transition-colors"
-                aria-label="Follow us on Instagram"
-              >
-                <Instagram className="w-5 h-5" />
-              </a>
-              <a
-                href="https://linkedin.com/company/nadupa-africa-foundation"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-stone-400 hover:text-white transition-colors"
-                aria-label="Connect with us on LinkedIn"
-              >
-                <Linkedin className="w-5 h-5" />
-              </a>
+              {socials.map((social) => (
+                <a
+                  key={social.label}
+                  href={social.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-stone-400 hover:text-white transition-colors"
+                  aria-label={social.label}
+                >
+                  <social.icon className="w-5 h-5" />
+                </a>
+              ))}
             </div>
           </div>
 
@@ -82,54 +49,37 @@ export function Footer() {
           <div>
             <h4 className="text-lg font-semibold mb-4">Quick Links</h4>
             <ul className="space-y-2">
-              <li>
-                <Link href="/about" className="text-stone-300 hover:text-white transition-colors text-sm">
-                  About Us
-                </Link>
-              </li>
-              <li>
-                <Link href="/programs" className="text-stone-300 hover:text-white transition-colors text-sm">
-                  Our Programs
-                </Link>
-              </li>
-              <li>
-                <Link href="/where-we-work" className="text-stone-300 hover:text-white transition-colors text-sm">
-                  Where We Work
-                </Link>
-              </li>
-              <li>
-                <Link href="/get-involved" className="text-stone-300 hover:text-white transition-colors text-sm">
-                  Get Involved
-                </Link>
-              </li>
-              <li>
-                <Link href="/contact" className="text-stone-300 hover:text-white transition-colors text-sm">
-                  Contact Us
-                </Link>
-              </li>
+              {[
+                { href: "/about", label: "About Us" },
+                { href: "/programs", label: "Our Programs" },
+                { href: "/where-we-work", label: "Where We Work" },
+                { href: "/get-involved", label: "Get Involved" },
+                { href: "/resources", label: "Resources" },
+                { href: "/transparency", label: "Transparency" },
+                { href: "/contact", label: "Contact Us" },
+              ].map((link) => (
+                <li key={link.href}>
+                  <Link href={link.href} className="text-stone-300 hover:text-white transition-colors text-sm">
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
 
-          {/* Programs */}
+          {/* Impact areas */}
           <div>
             <h4 className="text-lg font-semibold mb-4">Our Impact Areas</h4>
             <ul className="space-y-2">
-              <li className="flex items-center space-x-2">
-                <Droplets className="w-4 h-4 text-blue-400" />
-                <span className="text-stone-300 text-sm">Water & Sanitation</span>
-              </li>
-              <li className="flex items-center space-x-2">
-                <GraduationCap className="w-4 h-4 text-green-400" />
-                <span className="text-stone-300 text-sm">Education</span>
-              </li>
-              <li className="flex items-center space-x-2">
-                <Heart className="w-4 h-4 text-red-400" />
-                <span className="text-stone-300 text-sm">Healthcare</span>
-              </li>
-              <li className="flex items-center space-x-2">
-                <Users className="w-4 h-4 text-purple-400" />
-                <span className="text-stone-300 text-sm">Community Development</span>
-              </li>
+              {s.impactAreas.map((area, i) => {
+                const Icon = getIcon(area.icon)
+                return (
+                  <li key={i} className="flex items-center space-x-2">
+                    <Icon className={`w-4 h-4 ${IMPACT_COLORS[i % IMPACT_COLORS.length]}`} />
+                    <span className="text-stone-300 text-sm">{area.label}</span>
+                  </li>
+                )
+              })}
             </ul>
             <div className="mt-4">
               <Link
@@ -148,35 +98,32 @@ export function Footer() {
             <div className="space-y-3">
               <div className="flex items-start space-x-3">
                 <MapPin className="w-5 h-5 text-emerald-400 mt-0.5 flex-shrink-0" />
-                <div>
-                  <p className="text-stone-300 text-sm">
-                    Kajiado-West, Kajiado County
-                    <br />
-                    Kenya
-                  </p>
-                </div>
+                <p className="text-stone-300 text-sm">
+                  {s.addressLine1}
+                  <br />
+                  {s.addressLine2}
+                </p>
               </div>
               <div className="flex items-center space-x-3">
                 <Phone className="w-5 h-5 text-emerald-400 flex-shrink-0" />
-                <a href="tel:+254796093465" className="text-stone-300 hover:text-white transition-colors text-sm">
-                  +254 796 093 465
+                <a href={`tel:${s.phone.replace(/[^\d+]/g, "")}`} className="text-stone-300 hover:text-white transition-colors text-sm">
+                  {s.phone}
                 </a>
               </div>
               <div className="flex items-center space-x-3">
                 <Mail className="w-5 h-5 text-emerald-400 flex-shrink-0" />
-                <a
-                  href="mailto:info@nadupaafricafoundation.org"
-                  className="text-stone-300 hover:text-white transition-colors text-sm"
-                >
-                  info@nadupaafricafoundation.org
+                <a href={`mailto:${s.email}`} className="text-stone-300 hover:text-white transition-colors text-sm">
+                  {s.email}
                 </a>
               </div>
             </div>
 
-            <div className="mt-4 p-3 bg-stone-800 rounded-lg">
-              <p className="text-xs text-stone-400 mb-1">NGO Registration:</p>
-              <p className="text-sm font-mono text-emerald-400">NGO-6DF3EM</p>
-            </div>
+            {s.registrationNumber && (
+              <div className="mt-4 p-3 bg-stone-800 rounded-lg">
+                <p className="text-xs text-stone-400 mb-1">NGO Registration:</p>
+                <p className="text-sm font-mono text-emerald-400">{s.registrationNumber}</p>
+              </div>
+            )}
           </div>
         </div>
 
@@ -184,8 +131,8 @@ export function Footer() {
         <div className="border-t border-stone-800 mt-8 pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
             <div className="text-center md:text-left">
-              <p className="text-stone-400 text-sm">© 2024 NADUPA AFRICA FOUNDATION. All rights reserved.</p>
-              <p className="text-stone-500 text-xs mt-1">Registered NGO in Kenya | Tax-exempt status pending</p>
+              <p className="text-stone-400 text-sm">{s.copyright}</p>
+              <p className="text-stone-500 text-xs mt-1">{s.taxStatus}</p>
             </div>
             <div className="flex flex-wrap justify-center md:justify-end space-x-6 text-xs">
               <Link href="/terms" className="text-stone-400 hover:text-white transition-colors">
