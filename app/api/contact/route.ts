@@ -1,153 +1,42 @@
 import { NextResponse } from "next/server"
-import { Resend } from "resend"
-import { createClient } from "@supabase/supabase-js"
-import { escapeHtml } from "@/lib/email"
-
-// Lazily created so the module can load (and the app can build) without RESEND_API_KEY;
-// emails are simply skipped when the key is missing.
-let resend: Resend | null = null
-function getResend(): Resend | null {
-  if (!process.env.RESEND_API_KEY) return null
-  if (!resend) resend = new Resend(process.env.RESEND_API_KEY)
-  return resend
-}
-
-const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
+import { ZodError } from "zod"
+import { api } from "@/convex/_generated/api"
+import { getConvex, serverSecret } from "@/lib/convex-server"
+import { EmailService } from "@/lib/email"
+import { contactFormSchema } from "@/lib/validation"
 
 export async function POST(req: Request) {
+  let data
   try {
     const body = await req.json()
-    const { first_name, last_name, email, phone, subject, message } = body
-
-    // Validate required fields
-    if (!first_name || !last_name || !email || !subject || !message) {
-      return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
-    }
-
-    // 1. Save to Supabase
-    const { error: dbError } = await supabase.from("contact_messages").insert({
-      first_name,
-      last_name,
-      email,
-      phone,
-      subject,
-      message,
+    data = contactFormSchema.parse({
+      firstName: body.first_name?.trim(),
+      lastName: body.last_name?.trim(),
+      email: body.email?.trim().toLowerCase(),
+      phone: body.phone?.trim() || undefined,
+      subject: body.subject?.trim(),
+      message: body.message?.trim(),
     })
-
-    if (dbError) {
-      console.error("Database error:", dbError)
-      return NextResponse.json({ error: dbError.message }, { status: 500 })
-    }
-
-    // 2. Send Email via Resend
-    try {
-      const emailClient = getResend()
-      if (!emailClient) {
-        console.warn("RESEND_API_KEY not set - skipping contact form email notifications")
-        return NextResponse.json({
-          success: true,
-          warning: "Message saved but email notifications are not configured",
-        })
-      }
-
-      await emailClient.emails.send({
-        from: "NADUPA Africa Foundation <noreply@nadupaafricafoundation.org>", // must be a verified domain in Resend
-        to: "info@nadupaafricafoundation.org",
-        subject: `New Contact Form: ${subject}`,
-        html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <div style="background: linear-gradient(135deg, #059669, #10b981); color: white; padding: 20px; text-align: center;">
-              <h2>New Contact Form Submission</h2>
-              <p>NADUPA Africa Foundation</p>
-            </div>
-            
-            <div style="padding: 30px; background: #f9fafb;">
-              <h3 style="color: #374151; margin-bottom: 20px;">Message from ${escapeHtml(first_name)} ${escapeHtml(last_name)}</h3>
-
-              <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 15px;">
-                <p style="margin: 5px 0;"><strong>Name:</strong> ${escapeHtml(first_name)} ${escapeHtml(last_name)}</p>
-                <p style="margin: 5px 0;"><strong>Email:</strong> <a href="mailto:${escapeHtml(email)}">${escapeHtml(email)}</a></p>
-                <p style="margin: 5px 0;"><strong>Phone:</strong> ${escapeHtml(phone || "N/A")}</p>
-                <p style="margin: 5px 0;"><strong>Subject:</strong> ${escapeHtml(subject)}</p>
-              </div>
-
-              <div style="background: white; padding: 20px; border-radius: 8px;">
-                <p style="margin: 0 0 10px 0;"><strong>Message:</strong></p>
-                <p style="margin: 0; white-space: pre-wrap;">${escapeHtml(message)}</p>
-              </div>
-              
-              <div style="margin-top: 20px; padding: 15px; background: #ecfdf5; border-left: 4px solid #059669;">
-                <p style="margin: 0; color: #065f46;"><strong>Action Required:</strong> Please respond to this inquiry within 24 hours.</p>
-              </div>
-            </div>
-            
-            <div style="text-align: center; padding: 20px; color: #6b7280; font-size: 14px;">
-              <p>NADUPA Africa Foundation | Kajiado-West, Kajiado County, Kenya</p>
-              <p>Registration: NGO-6DF3EM</p>
-            </div>
-          </div>
-        `,
-      })
-
-      // Send confirmation email to user
-      await emailClient.emails.send({
-        from: "NADUPA Africa Foundation <noreply@nadupaafricafoundation.org>",
-        to: email,
-        subject: "Thank you for contacting NADUPA Africa Foundation",
-        html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <div style="background: linear-gradient(135deg, #059669, #10b981); color: white; padding: 30px; text-align: center;">
-              <h1>Thank You for Contacting Us!</h1>
-              <p>NADUPA Africa Foundation</p>
-            </div>
-            
-            <div style="padding: 30px; background: #f9fafb;">
-              <p>Dear ${escapeHtml(first_name)} ${escapeHtml(last_name)},</p>
-
-              <p>Thank you for reaching out to NADUPA Africa Foundation. We have received your message regarding "<strong>${escapeHtml(subject)}</strong>" and appreciate your interest in our work.</p>
-              
-              <div style="background: #ecfdf5; padding: 15px; border-left: 4px solid #059669; margin: 20px 0;">
-                <p style="margin: 0 0 10px 0;"><strong>What happens next?</strong></p>
-                <ul style="margin: 0; padding-left: 20px;">
-                  <li>Our team will review your message within 24 hours</li>
-                  <li>You'll receive a personalized response from our staff</li>
-                  <li>If needed, we'll schedule a call or meeting to discuss further</li>
-                </ul>
-              </div>
-              
-              <p>In the meantime, feel free to:</p>
-              <ul>
-                <li>Explore our <a href="https://nadupaafricafoundation.org/programs" style="color: #059669;">programs and initiatives</a></li>
-                <li>Learn more <a href="https://nadupaafricafoundation.org/about" style="color: #059669;">about our mission</a></li>
-                <li>Follow us on social media for updates</li>
-              </ul>
-              
-              <p>Thank you for your commitment to empowering communities across Kenya.</p>
-              
-              <p>Warm regards,<br>
-              <strong>The NADUPA Africa Foundation Team</strong></p>
-            </div>
-            
-            <div style="text-align: center; padding: 20px; color: #6b7280; font-size: 14px;">
-              <p>NADUPA Africa Foundation | Kajiado-West, Kajiado County, Kenya<br>
-              Email: info@nadupaafricafoundation.org | Registration: NGO-6DF3EM</p>
-              <p><em>Empowering Communities, Transforming Lives</em></p>
-            </div>
-          </div>
-        `,
-      })
-    } catch (emailError) {
-      console.error("Email error:", emailError)
-      // Don't fail the request if email fails, but log it
-      return NextResponse.json({
-        success: true,
-        warning: "Message saved but email notification failed",
-      })
-    }
-
-    return NextResponse.json({ success: true })
   } catch (error) {
-    console.error("Contact form error:", error)
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+    const message = error instanceof ZodError ? error.issues[0].message : "Invalid request"
+    return NextResponse.json({ error: message }, { status: 400 })
   }
+
+  try {
+    await getConvex().mutation(api.submissions.createContactMessage, { secret: serverSecret(), ...data })
+  } catch (error) {
+    console.error("Contact form save error:", error)
+    return NextResponse.json(
+      { error: "Sorry, we couldn't send your message. Please try again or email info@nadupaafricafoundation.org." },
+      { status: 500 },
+    )
+  }
+
+  // The message is saved; email problems shouldn't fail the submission.
+  const emails = await EmailService.sendContactFormNotification({ ...data, submittedAt: new Date().toISOString() })
+  if (!emails.userConfirmation.success || !emails.adminNotification.success) {
+    console.error("Contact form email failed:", emails)
+  }
+
+  return NextResponse.json({ success: true })
 }

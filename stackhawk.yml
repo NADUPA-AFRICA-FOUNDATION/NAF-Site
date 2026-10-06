@@ -1,0 +1,9 @@
+app:
+  applicationId: c38328fb-6952-4272-93bf-65f7684560a5
+  env: Development
+  host: ${APP_HOST:http://localhost:3000}
+hawk:
+  spider:
+    base: true
+    ajax: false
+    maxDurationMinutes: 5

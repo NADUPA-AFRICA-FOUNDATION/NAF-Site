@@ -1,3 +1,8 @@
+const isDev = process.env.NODE_ENV !== 'production'
+
+// Hosts that serve uploaded images and documents
+const storageHosts = 'https://*.supabase.co https://blob.vercel-storage.com https://*.public.blob.vercel-storage.com'
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
@@ -53,11 +58,11 @@ const nextConfig = {
             key: 'Content-Security-Policy',
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+              `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ''}`,
               "style-src 'self' 'unsafe-inline'",
-              "img-src 'self' data: blob: https:",
+              `img-src 'self' data: blob: ${storageHosts}`,
               "font-src 'self' data:",
-              "connect-src 'self' https://*.supabase.co https://blob.vercel-storage.com",
+              `connect-src 'self' ${storageHosts}`,
               "frame-ancestors 'none'",
               "base-uri 'self'",
               "form-action 'self'",

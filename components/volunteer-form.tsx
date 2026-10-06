@@ -9,9 +9,8 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { toast } from "@/components/ui/use-toast"
 import { Toaster } from "@/components/ui/toaster"
-import { CheckCircle2, Loader2, AlertCircle, Database, ExternalLink, Copy } from "lucide-react"
+import { CheckCircle2, Loader2, AlertCircle } from "lucide-react"
 import { submitVolunteerForm } from "@/app/actions/volunteer"
-import { Card, CardContent } from "@/components/ui/card"
 import { TermsModal } from "@/components/terms-modal"
 
 export function VolunteerForm() {
@@ -22,7 +21,6 @@ export function VolunteerForm() {
   const [selectedSkills, setSelectedSkills] = useState<string[]>([])
   const [agreeToTerms, setAgreeToTerms] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [needsSetup, setNeedsSetup] = useState(false)
 
   const areasOfInterest = [
     { id: "education", label: "Education Support" },
@@ -64,7 +62,6 @@ export function VolunteerForm() {
     event.preventDefault()
     setIsSubmitting(true)
     setError(null)
-    setNeedsSetup(false)
 
     const formData = new FormData(event.currentTarget)
 
@@ -75,28 +72,20 @@ export function VolunteerForm() {
     formData.append("agreeToTerms", agreeToTerms.toString())
 
     try {
-      console.log("Submitting volunteer form...")
       const result = await submitVolunteerForm(formData)
-      console.log("Form submission result:", result)
 
       if (result.success) {
+        // The success view replaces the form, so only the controlled fields need clearing
         setIsSubmitted(true)
-        toast({
-          title: "Application Submitted",
-          description: result.message,
-        })
-        // Reset form
-        event.currentTarget.reset()
         setSelectedInterests([])
         setSelectedAvailability([])
         setSelectedSkills([])
         setAgreeToTerms(false)
+        toast({
+          title: "Application Submitted",
+          description: result.message,
+        })
       } else {
-        // Check if it needs database setup
-        if ((result as any).needsSetup) {
-          setNeedsSetup(true)
-        }
-
         setError(result.message)
         toast({
           title: "Error",
@@ -106,18 +95,7 @@ export function VolunteerForm() {
       }
     } catch (error) {
       console.error("Form submission error:", error)
-      const errorMessage = error instanceof Error ? error.message : "Something went wrong. Please try again."
-
-      // Check if it's a database schema error
-      if (
-        errorMessage.includes("column") ||
-        errorMessage.includes("schema") ||
-        errorMessage.includes("table") ||
-        errorMessage.includes("Could not find")
-      ) {
-        setNeedsSetup(true)
-      }
-
+      const errorMessage = "Something went wrong. Please try again."
       setError(errorMessage)
       toast({
         title: "Error",
@@ -137,73 +115,6 @@ export function VolunteerForm() {
     } else if (type === "skills") {
       setSelectedSkills((prev) => (checked ? [...prev, value] : prev.filter((item) => item !== value)))
     }
-  }
-
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text)
-    toast({
-      title: "Copied",
-      description: "Script name copied to clipboard",
-    })
-  }
-
-  if (needsSetup) {
-    return (
-      <Card className="border-red-200 bg-red-50">
-        <CardContent className="p-6">
-          <div className="flex flex-col items-center gap-4 text-center">
-            <Database className="w-12 h-12 text-red-600" />
-            <h3 className="text-xl font-bold text-red-800">Database Setup Required</h3>
-            <p className="text-red-700 mb-4">
-              The volunteer form requires database setup. The volunteer_signups table is missing or doesn't have the
-              required columns.
-            </p>
-            <div className="bg-white p-4 rounded-lg border border-red-200 text-left w-full">
-              <h4 className="font-semibold text-red-800 mb-2">Required Action:</h4>
-              <div className="space-y-3 text-red-700">
-                <p className="mb-2">Run this SQL script in your Supabase SQL editor:</p>
-                <div className="bg-red-50 p-3 rounded border border-red-200 flex items-center justify-between">
-                  <code className="font-mono text-sm">scripts/09-simple-volunteer-table.sql</code>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => copyToClipboard("scripts/09-simple-volunteer-table.sql")}
-                    className="h-6 w-6 p-0"
-                  >
-                    <Copy className="w-3 h-3" />
-                  </Button>
-                </div>
-                <div className="text-sm space-y-1">
-                  <p>
-                    <strong>Steps:</strong>
-                  </p>
-                  <ol className="list-decimal list-inside space-y-1 ml-2">
-                    <li>Open your Supabase dashboard</li>
-                    <li>Go to the SQL Editor</li>
-                    <li>Copy the content from scripts/09-simple-volunteer-table.sql</li>
-                    <li>Paste and run the script</li>
-                    <li>Come back and try submitting the form again</li>
-                  </ol>
-                </div>
-              </div>
-            </div>
-            <div className="flex gap-2">
-              <Button onClick={() => setNeedsSetup(false)} className="bg-red-600 hover:bg-red-700 text-white">
-                Try Again After Setup
-              </Button>
-              <Button
-                variant="outline"
-                className="border-red-600 text-red-600 hover:bg-red-50"
-                onClick={() => window.open("https://supabase.com/dashboard", "_blank")}
-              >
-                <ExternalLink className="w-4 h-4 mr-2" />
-                Open Supabase
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    )
   }
 
   if (isSubmitted) {
@@ -233,8 +144,8 @@ export function VolunteerForm() {
 
   return (
     <>
-      <form onSubmit={handleSubmit} className="space-y-8">
-        {error && !needsSetup && (
+      <form method="post" onSubmit={handleSubmit} className="space-y-8">
+        {error && (
           <div className="bg-red-50 border border-red-200 rounded-md p-4 flex items-start gap-3">
             <AlertCircle className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" />
             <div>
