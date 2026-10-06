@@ -46,3 +46,21 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ error: "Could not update submission" }, { status: 500 })
   }
 }
+
+// Permanently deletes a submission (data subject erasure requests, retention clean-up).
+export async function DELETE(request: NextRequest) {
+  const { user } = await checkAdminAuth()
+  if (!user) return NextResponse.json({ error: "Not authenticated" }, { status: 401 })
+
+  const id = request.nextUrl.searchParams.get("id")
+  if (!id) return NextResponse.json({ error: "Invalid request" }, { status: 400 })
+
+  try {
+    await getConvex().mutation(api.submissions.remove, { secret: serverSecret(), id: id as Id<"contactMessages"> })
+    console.log(`Admin ${user.email} deleted submission ${id}`)
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    console.error("Delete submission error:", error)
+    return NextResponse.json({ error: "Could not delete submission" }, { status: 500 })
+  }
+}

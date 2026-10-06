@@ -104,7 +104,7 @@ export const getInvolvedPage = definePage({
           button: "Learn More",
         },
       ],
-      mpesaPaybill: "[To be provided]",
+      mpesaPaybill: "Contact us for our M-Pesa details",
       mpesaAccount: "NADUPA DONATION",
       bankText: "Direct bank transfers for larger donations:",
     },

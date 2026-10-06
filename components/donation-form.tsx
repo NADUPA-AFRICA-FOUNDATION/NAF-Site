@@ -1,5 +1,7 @@
 "use client"
 
+import { PrivacyNotice } from "@/components/privacy-notice"
+
 import type React from "react"
 
 import { useState } from "react"
@@ -187,6 +189,8 @@ export function DonationForm() {
             </Tabs>
           </div>
         </div>
+
+        <PrivacyNotice purpose="arrange your donation" />
 
         <div className="pt-4">
           <Button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-700" disabled={isSubmitting}>

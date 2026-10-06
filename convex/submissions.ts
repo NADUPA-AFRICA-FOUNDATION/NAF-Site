@@ -89,3 +89,17 @@ export const setStatus = mutation({
     return null
   },
 })
+
+// Permanent deletion, for erasure requests and once the purpose has lapsed.
+export const remove = mutation({
+  args: {
+    secret: v.string(),
+    id: v.union(v.id("contactMessages"), v.id("donationInterests"), v.id("volunteerSignups")),
+  },
+  returns: v.null(),
+  handler: async (ctx, { secret, id }) => {
+    assertServer(secret)
+    await ctx.db.delete(id)
+    return null
+  },
+})

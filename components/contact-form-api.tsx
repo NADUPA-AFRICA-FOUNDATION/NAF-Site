@@ -1,5 +1,7 @@
 "use client"
 
+import { PrivacyNotice } from "@/components/privacy-notice"
+
 import type React from "react"
 
 import { useState, useRef } from "react"
@@ -236,6 +238,8 @@ export function ContactFormAPI() {
             placeholder="Tell us how we can help you or how you'd like to get involved with our mission..."
           />
         </div>
+
+        <PrivacyNotice purpose="reply to your message" />
 
         <Button
           type="submit"

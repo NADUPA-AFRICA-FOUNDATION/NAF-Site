@@ -46,9 +46,7 @@ export const volunteerPage = definePage({
       image: "/images/maasai-celebration.jpeg",
       imageAlt: "Community celebration with NADUPA volunteers",
       stats: [
-        { value: "500+", label: "Active Volunteers" },
         { value: "50+", label: "Communities Served" },
-        { value: "10+", label: "Years of Impact" },
       ],
     },
     why: {

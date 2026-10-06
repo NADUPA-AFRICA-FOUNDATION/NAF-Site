@@ -1,5 +1,7 @@
 "use client"
 
+import { PrivacyNotice } from "@/components/privacy-notice"
+
 import type React from "react"
 
 import { useState } from "react"
@@ -330,6 +332,8 @@ export function VolunteerForm() {
             </div>
           </div>
         </div>
+
+        <PrivacyNotice purpose="consider your application and contact you about volunteering" />
 
         <div className="pt-4">
           <Button
