@@ -36,6 +36,14 @@ export default defineSchema({
     status: submissionStatus,
   }).index("by_status", ["status"]),
 
+  // Editable public-site content (one row per page, see lib/cms)
+  siteContent: defineTable({
+    key: v.string(),
+    content: v.any(),
+    updatedAt: v.number(),
+    updatedBy: v.string(),
+  }).index("by_key", ["key"]),
+
   // TOTP two-factor state for admin accounts. The secret is encrypted by the
   // Next.js server before it is stored here; Convex never sees it in plain text.
   adminTotp: defineTable({

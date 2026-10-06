@@ -1,33 +1,26 @@
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { Heart, Users, Leaf, GraduationCap, MapPin, ArrowRight } from "lucide-react"
+import { Heart, Users, ArrowRight } from "lucide-react"
 import Link from "next/link"
 import { Navigation } from "@/components/navigation"
 import { Footer } from "@/components/footer"
 import Image from "next/image"
+import { getContent } from "@/lib/cms/content"
+import { getIcon } from "@/lib/cms/icons"
 
-export default function HomePage() {
-  const impactStats = [
-    { number: "1,000+", label: "Lives Transformed", icon: Heart },
-    { number: "5", label: "Counties Served", icon: MapPin },
-    { number: "50+", label: "Programs Running", icon: Users },
-  ]
+export const revalidate = 3600
+
+export default async function HomePage() {
+  const c = await getContent("home")
 
   return (
     <div className="min-h-screen bg-stone-50">
       <Navigation />
 
-      {/* Hero Section with Maasai Women Background */}
+      {/* Hero Section */}
       <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0 z-0">
-          <Image
-            src="/images/maasai-women-community.png"
-            alt="Smiling Maasai women in traditional attire representing the communities we serve"
-            fill
-            className="object-cover object-center"
-            priority
-            sizes="100vw"
-          />
+          <Image src={c.hero.image} alt={c.hero.imageAlt} fill className="object-cover object-center" priority sizes="100vw" />
           <div className="absolute inset-0 bg-gradient-to-r from-emerald-900/80 via-emerald-800/70 to-emerald-700/60"></div>
         </div>
 
@@ -38,19 +31,14 @@ export default function HomePage() {
                 <Heart className="w-10 h-10 text-white" />
               </div>
               <h1 className="text-4xl md:text-7xl font-bold mb-6 leading-tight">
-                Empowering Communities,
-                <span className="block text-amber-300">Transforming Lives</span>
+                {c.hero.title}
+                <span className="block text-amber-300">{c.hero.highlight}</span>
               </h1>
-              <p className="text-xl md:text-2xl mb-8 opacity-90 leading-relaxed">
-                Fostering education, supporting the vulnerable, and conserving our environment across Kenya.
-              </p>
+              <p className="text-xl md:text-2xl mb-8 opacity-90 leading-relaxed">{c.hero.subtitle}</p>
             </div>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link href="/get-involved#donation">
-                <Button
-                  size="lg"
-                  className="bg-amber-600 hover:bg-amber-700 hover:shadow-lg transition-all duration-300 text-white px-8 py-4 text-lg"
-                >
+              <Link href="/donate">
+                <Button size="lg" className="bg-amber-600 hover:bg-amber-700 hover:shadow-lg transition-all duration-300 text-white px-8 py-4 text-lg">
                   <Heart className="w-5 h-5 mr-2" />
                   Donate Now
                 </Button>
@@ -69,28 +57,17 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Impact Intro Section with Traditional Huts */}
+      {/* Introduction */}
       <section className="relative py-20 overflow-hidden">
         <div className="absolute inset-0 z-0">
-          <Image
-            src="/images/traditional-huts.jpeg"
-            alt="Traditional African huts representing communities we serve"
-            fill
-            className="object-cover object-center"
-            sizes="100vw"
-          />
+          <Image src={c.intro.image} alt="" fill className="object-cover object-center" sizes="100vw" />
           <div className="absolute inset-0 bg-gradient-to-r from-stone-900/90 via-stone-800/80 to-transparent"></div>
         </div>
 
         <div className="relative z-10 container mx-auto px-4">
           <div className="max-w-2xl">
-            <h2 className="text-3xl md:text-5xl font-bold text-white mb-6 leading-tight">
-              Supporting communities where help is needed most
-            </h2>
-            <p className="text-xl text-white/90 mb-8 leading-relaxed">
-              From the rolling hills of Kajiado to the coastal regions of Lamu, we bring hope, education, and
-              sustainable change to Kenya's most vulnerable communities.
-            </p>
+            <h2 className="text-3xl md:text-5xl font-bold text-white mb-6 leading-tight">{c.intro.title}</h2>
+            <p className="text-xl text-white/90 mb-8 leading-relaxed">{c.intro.text}</p>
             <Link href="/about">
               <Button size="lg" className="bg-amber-600 hover:bg-amber-700 text-white">
                 Learn Our Story
@@ -105,22 +82,23 @@ export default function HomePage() {
       <section className="py-16 px-4 bg-white">
         <div className="container mx-auto">
           <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-stone-800 mb-4">Our Impact Across Kenya</h2>
-            <p className="text-lg text-stone-600 max-w-2xl mx-auto">
-              Every number represents a life touched, a community strengthened, and hope restored.
-            </p>
+            <h2 className="text-3xl md:text-4xl font-bold text-stone-800 mb-4">{c.impact.title}</h2>
+            <p className="text-lg text-stone-600 max-w-2xl mx-auto">{c.impact.text}</p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-8">
-            {impactStats.map((stat, index) => (
-              <Card key={index} className="text-center border-stone-200 hover:shadow-lg transition-shadow">
-                <CardContent className="p-8">
-                  <stat.icon className="w-12 h-12 text-emerald-600 mx-auto mb-4" />
-                  <div className="text-4xl font-bold text-stone-800 mb-2">{stat.number}</div>
-                  <div className="text-stone-600 font-medium">{stat.label}</div>
-                </CardContent>
-              </Card>
-            ))}
+            {c.impact.stats.map((stat, index) => {
+              const Icon = getIcon(stat.icon)
+              return (
+                <Card key={index} className="text-center border-stone-200 hover:shadow-lg transition-shadow">
+                  <CardContent className="p-8">
+                    <Icon className="w-12 h-12 text-emerald-600 mx-auto mb-4" />
+                    <div className="text-4xl font-bold text-stone-800 mb-2">{stat.value}</div>
+                    <div className="text-stone-600 font-medium">{stat.label}</div>
+                  </CardContent>
+                </Card>
+              )
+            })}
           </div>
         </div>
       </section>
@@ -130,47 +108,32 @@ export default function HomePage() {
         <div className="container mx-auto">
           <div className="max-w-6xl mx-auto">
             <div className="text-center mb-12">
-              <h2 className="text-3xl md:text-4xl font-bold text-stone-800 mb-6">Our Mission</h2>
-              <p className="text-xl text-stone-600 leading-relaxed mb-8">
-                To empower vulnerable communities in Kenya by promoting access to education, supporting persons with
-                disabilities, combating alcohol and substance abuse, and advancing environmental conservation.
-              </p>
+              <h2 className="text-3xl md:text-4xl font-bold text-stone-800 mb-6">{c.mission.title}</h2>
+              <p className="text-xl text-stone-600 leading-relaxed mb-8">{c.mission.text}</p>
             </div>
 
             <div className="grid lg:grid-cols-2 gap-12 items-center mb-8">
               <div className="relative h-80 rounded-lg overflow-hidden">
-                <Image
-                  src="/images/maasai-celebration.jpeg"
-                  alt="Maasai community celebration showcasing cultural preservation"
-                  fill
-                  className="object-cover object-center"
-                  sizes="(max-width: 1024px) 100vw, 50vw"
-                />
+                <Image src={c.mission.image} alt={c.mission.imageCaption} fill className="object-cover object-center" sizes="(max-width: 1024px) 100vw, 50vw" />
                 <div className="absolute inset-0 bg-gradient-to-t from-emerald-900/40 to-transparent"></div>
-                <div className="absolute bottom-4 left-4 text-white">
-                  <p className="text-sm font-medium bg-emerald-600/80 backdrop-blur-sm px-3 py-1 rounded-full">
-                    Preserving Heritage, Building Future
-                  </p>
-                </div>
+                {c.mission.imageCaption && (
+                  <div className="absolute bottom-4 left-4 text-white">
+                    <p className="text-sm font-medium bg-emerald-600/80 backdrop-blur-sm px-3 py-1 rounded-full">{c.mission.imageCaption}</p>
+                  </div>
+                )}
               </div>
 
               <div className="space-y-6">
-                <div className="bg-white p-6 rounded-lg shadow-sm border border-stone-200">
-                  <Leaf className="w-8 h-8 text-emerald-600 mb-4" />
-                  <h3 className="font-semibold text-stone-800 mb-2">Environmental Conservation</h3>
-                  <p className="text-stone-600 text-sm">
-                    Protecting Kenya's natural heritage for future generations through community-led conservation
-                    initiatives.
-                  </p>
-                </div>
-                <div className="bg-white p-6 rounded-lg shadow-sm border border-stone-200">
-                  <GraduationCap className="w-8 h-8 text-emerald-600 mb-4" />
-                  <h3 className="font-semibold text-stone-800 mb-2">Education Access</h3>
-                  <p className="text-stone-600 text-sm">
-                    Breaking barriers to education through school fees support, learning materials, and community
-                    programs.
-                  </p>
-                </div>
+                {c.mission.highlights.map((item, index) => {
+                  const Icon = getIcon(item.icon)
+                  return (
+                    <div key={index} className="bg-white p-6 rounded-lg shadow-sm border border-stone-200">
+                      <Icon className="w-8 h-8 text-emerald-600 mb-4" />
+                      <h3 className="font-semibold text-stone-800 mb-2">{item.title}</h3>
+                      <p className="text-stone-600 text-sm">{item.description}</p>
+                    </div>
+                  )
+                })}
               </div>
             </div>
           </div>
@@ -180,16 +143,11 @@ export default function HomePage() {
       {/* Call to Action */}
       <section className="py-16 px-4 bg-gradient-to-r from-amber-600 via-orange-600 to-red-600 text-white">
         <div className="container mx-auto text-center">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">Join Our Mission</h2>
-          <p className="text-xl mb-8 opacity-90 max-w-2xl mx-auto">
-            Together, we can create lasting change in communities across Kenya. Your support makes the difference.
-          </p>
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">{c.cta.title}</h2>
+          <p className="text-xl mb-8 opacity-90 max-w-2xl mx-auto">{c.cta.text}</p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href="/get-involved">
-              <Button
-                size="lg"
-                className="bg-white text-emerald-600 hover:bg-stone-100 hover:shadow-lg transition-all duration-300 px-8 py-3"
-              >
+              <Button size="lg" className="bg-white text-emerald-600 hover:bg-stone-100 hover:shadow-lg transition-all duration-300 px-8 py-3">
                 Get Involved Today
               </Button>
             </Link>

@@ -2,50 +2,44 @@
 
 import type React from "react"
 import { useEffect, useState } from "react"
+import Image from "next/image"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { Shield, LogOut } from "lucide-react"
+import { ExternalLink, FileText, Inbox, LayoutTemplate, LogOut, Menu, X } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 
 const NAV = [
-  { href: "/admin/submissions", label: "Submissions" },
-  { href: "/admin/documents", label: "Documents" },
+  { href: "/admin/pages", label: "Website pages", icon: LayoutTemplate },
+  { href: "/admin/submissions", label: "Submissions", icon: Inbox },
+  { href: "/admin/documents", label: "Documents", icon: FileText },
 ]
 
 // Header, navigation and session check shared by every admin page.
+// Styled like the public site's navigation so the two feel like one product.
 export function AdminShell({ children }: { children: React.ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [userEmail, setUserEmail] = useState<string | null>(null)
+  const [menuOpen, setMenuOpen] = useState(false)
   const router = useRouter()
   const pathname = usePathname()
   const { toast } = useToast()
 
   useEffect(() => {
-    checkAuth()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
-  const checkAuth = async () => {
-    try {
-      const response = await fetch("/api/admin/session")
-
-      if (!response.ok) {
-        router.push("/admin/login")
-        return
-      }
-
-      const { user } = await response.json()
-      setUserEmail(user.email)
-      setIsAuthenticated(true)
-    } catch (err) {
-      console.error("Auth check error:", err)
-      router.push("/admin/login")
-    } finally {
-      setIsLoading(false)
-    }
-  }
+    fetch("/api/admin/session")
+      .then(async (response) => {
+        if (!response.ok) {
+          router.push("/admin/login")
+          return
+        }
+        const { user } = await response.json()
+        setUserEmail(user.email)
+        setIsAuthenticated(true)
+      })
+      .catch(() => router.push("/admin/login"))
+      .finally(() => setIsLoading(false))
+  }, [router])
 
   const handleSignOut = async () => {
     try {
@@ -53,10 +47,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
     } catch (err) {
       console.error("Sign out error:", err)
     }
-    toast({
-      title: "Signed out",
-      description: "You have been signed out successfully.",
-    })
+    toast({ title: "Signed out", description: "You have been signed out successfully." })
     router.push("/admin/login")
   }
 
@@ -71,48 +62,87 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
     )
   }
 
-  if (!isAuthenticated) {
-    return null // Will redirect in useEffect
-  }
+  if (!isAuthenticated) return null
+
+  const isActive = (href: string) => pathname === href || pathname.startsWith(`${href}/`)
 
   return (
     <div className="min-h-screen bg-stone-50">
-      {/* Admin Header */}
-      <div className="bg-emerald-600 text-white p-4">
-        <div className="max-w-6xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-6">
-            <div className="flex items-center gap-2">
-              <Shield className="w-5 h-5" />
-              <span className="font-semibold">Admin Panel</span>
-            </div>
-            <nav className="flex gap-1">
+      <nav className="bg-white shadow-sm border-b border-stone-200 sticky top-0 z-50">
+        <div className="container mx-auto px-4">
+          <div className="flex items-center justify-between h-16 gap-4">
+            <Link href="/admin/pages" className="flex items-center gap-3">
+              <div className="relative h-12 w-24">
+                <Image
+                  src="/images/nadupa-logo-vertical.png"
+                  alt="NADUPA AFRICA FOUNDATION"
+                  fill
+                  className="object-contain object-left"
+                  priority
+                />
+              </div>
+              <span className="hidden sm:inline text-xs font-semibold uppercase tracking-wide text-emerald-700 bg-emerald-50 px-2 py-1 rounded">
+                Admin
+              </span>
+            </Link>
+
+            <div className="hidden lg:flex items-center gap-1">
               {NAV.map((item) => (
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`px-3 py-1 rounded text-sm ${
-                    pathname === item.href ? "bg-emerald-800" : "hover:bg-emerald-700"
+                  className={`flex items-center gap-2 px-3 py-2 rounded-md font-medium transition-colors ${
+                    isActive(item.href) ? "text-emerald-700 bg-emerald-50" : "text-stone-600 hover:text-emerald-600"
                   }`}
                 >
+                  <item.icon className="w-4 h-4" />
                   {item.label}
                 </Link>
               ))}
-            </nav>
+            </div>
+
+            <div className="hidden lg:flex items-center gap-3">
+              <a href="/" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-sm text-stone-600 hover:text-emerald-600">
+                <ExternalLink className="w-4 h-4" />
+                View site
+              </a>
+              {userEmail && <span className="text-sm text-stone-500 hidden xl:inline">{userEmail}</span>}
+              <Button variant="outline" size="sm" onClick={handleSignOut} className="border-stone-300">
+                <LogOut className="w-4 h-4" />
+                Sign out
+              </Button>
+            </div>
+
+            <button className="lg:hidden p-2" onClick={() => setMenuOpen(!menuOpen)} aria-label="Menu">
+              {menuOpen ? <X className="w-6 h-6 text-stone-600" /> : <Menu className="w-6 h-6 text-stone-600" />}
+            </button>
           </div>
-          <div className="flex items-center gap-4">
-            {userEmail && <span className="text-sm hidden md:inline">Welcome, {userEmail}</span>}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleSignOut}
-              className="bg-emerald-700 hover:bg-emerald-800 text-white border-emerald-500"
-            >
-              <LogOut className="w-4 h-4 mr-2" />
-              Sign Out
-            </Button>
-          </div>
+
+          {menuOpen && (
+            <div className="lg:hidden py-4 border-t border-stone-200 flex flex-col gap-3">
+              {NAV.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={() => setMenuOpen(false)}
+                  className={`flex items-center gap-2 font-medium ${isActive(item.href) ? "text-emerald-700" : "text-stone-600"}`}
+                >
+                  <item.icon className="w-4 h-4" />
+                  {item.label}
+                </Link>
+              ))}
+              <a href="/" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-stone-600">
+                <ExternalLink className="w-4 h-4" />
+                View site
+              </a>
+              <Button variant="outline" size="sm" onClick={handleSignOut} className="w-fit">
+                <LogOut className="w-4 h-4" />
+                Sign out
+              </Button>
+            </div>
+          )}
         </div>
-      </div>
+      </nav>
 
       {children}
     </div>

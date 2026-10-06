@@ -1,18 +1,14 @@
-import { Navigation } from "@/components/navigation"
-import { Footer } from "@/components/footer"
-import PrivacyClientPage from "./PrivacyClientPage"
+import type { Metadata } from "next"
+import { LegalPage } from "@/components/legal-page"
+import { getContent } from "@/lib/cms/content"
 
-export const metadata = {
+export const revalidate = 3600
+
+export const metadata: Metadata = {
   title: "Privacy Policy - NADUPA AFRICA FOUNDATION",
   description: "Our commitment to protecting your privacy and personal data",
 }
 
-export default function PrivacyPage() {
-  return (
-    <>
-      <Navigation />
-      <PrivacyClientPage />
-      <Footer />
-    </>
-  )
+export default async function PrivacyPage() {
+  return <LegalPage content={await getContent("privacy")} />
 }
