@@ -1,7 +1,7 @@
 import { type NextRequest } from "next/server"
 import crypto from "crypto"
 import { isAllowedAdminEmail, verifySignedToken } from "@/lib/admin-session"
-import { redirectToLoginError, redirectToTwoFactor, siteOrigin } from "@/lib/admin-2fa"
+import { redirectToLoginError, completeFirstStep, siteOrigin } from "@/lib/admin-2fa"
 import { exchangeGoogleCode, GOOGLE_STATE_COOKIE } from "@/lib/google-oauth"
 
 export async function GET(request: NextRequest) {
@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
     return redirectToLoginError(origin, `${email} is not allowed to access the admin panel.`)
   }
 
-  const response = redirectToTwoFactor(origin, email)
+  const response = await completeFirstStep(origin, email)
   response.cookies.set(GOOGLE_STATE_COOKIE, "", { path: "/api/admin/google", maxAge: 0 })
   return response
 }

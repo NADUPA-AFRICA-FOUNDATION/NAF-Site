@@ -1,7 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { api } from "@/convex/_generated/api"
 import { getConvex, serverSecret } from "@/lib/convex-server"
-import { getPendingAdminEmail, issueFullSession } from "@/lib/admin-2fa"
+import { getPendingAdminEmail, issueFullSession, trustThisDevice } from "@/lib/admin-2fa"
 import { decryptSecret, generateBackupCodes, hashBackupCode, verifyTotp } from "@/lib/totp"
 
 // Step 2 of sign-in. Accepts a 6-digit authenticator code, or a backup code
@@ -16,6 +16,7 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json().catch(() => ({}))
     const code = typeof body.code === "string" ? body.code.trim().replace(/\s/g, "") : ""
+    const rememberDevice = body.rememberDevice === true
     if (!code) {
       return NextResponse.json({ error: "Enter the code from your authenticator app" }, { status: 400 })
     }
@@ -51,6 +52,7 @@ export async function POST(request: NextRequest) {
       })
       const response = NextResponse.json({ success: true, backupCodes })
       issueFullSession(response, email)
+      if (rememberDevice) await trustThisDevice(response, email)
       return response
     }
 
@@ -69,6 +71,7 @@ export async function POST(request: NextRequest) {
       backupCodesRemaining: step === null ? totp.backupCodesRemaining - 1 : totp.backupCodesRemaining,
     })
     issueFullSession(response, email)
+    if (rememberDevice) await trustThisDevice(response, email)
     return response
   } catch (error) {
     console.error("2FA verify error:", error)

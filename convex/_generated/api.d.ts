@@ -9,6 +9,7 @@
  */
 
 import type * as adminTotp from "../adminTotp.js";
+import type * as rateLimits from "../rateLimits.js";
 import type * as serverAuth from "../serverAuth.js";
 import type * as siteContent from "../siteContent.js";
 import type * as submissions from "../submissions.js";
@@ -21,6 +22,7 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   adminTotp: typeof adminTotp;
+  rateLimits: typeof rateLimits;
   serverAuth: typeof serverAuth;
   siteContent: typeof siteContent;
   submissions: typeof submissions;

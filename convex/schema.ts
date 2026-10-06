@@ -44,6 +44,13 @@ export default defineSchema({
     updatedBy: v.string(),
   }).index("by_key", ["key"]),
 
+  // Fixed-window counters for rate limiting (e.g. sign-in link requests)
+  rateLimits: defineTable({
+    key: v.string(),
+    count: v.number(),
+    windowStart: v.number(),
+  }).index("by_key", ["key"]),
+
   // TOTP two-factor state for admin accounts. The secret is encrypted by the
   // Next.js server before it is stored here; Convex never sees it in plain text.
   adminTotp: defineTable({
