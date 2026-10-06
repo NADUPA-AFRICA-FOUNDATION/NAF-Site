@@ -1,5 +1,5 @@
 // Server-side admin authentication check, used by API routes and server actions.
-// Sessions are issued by POST /api/admin/login as a signed httpOnly cookie.
+// Sessions are issued after password + 2FA (POST /api/admin/2fa/verify) as a signed httpOnly cookie.
 import { cookies } from "next/headers"
 import { ADMIN_SESSION_COOKIE, isAdminAuthConfigured, verifyAdminSessionToken } from "@/lib/admin-session"
 

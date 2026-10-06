@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
+import { ADMIN_SESSION_COOKIE, verifyAdminSessionToken } from "@/lib/admin-session"
 
 const UNSAFE_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"])
 
@@ -23,9 +24,18 @@ export function proxy(request: NextRequest) {
   if (isCrossSiteRequest(request)) {
     return NextResponse.json({ error: "Cross-site request blocked" }, { status: 403 })
   }
-  if (request.nextUrl.pathname.startsWith("/api/")) return NextResponse.next()
+  const { pathname } = request.nextUrl
+  if (pathname.startsWith("/api/")) return NextResponse.next()
+
+  // Admin pages need a full (password + 2FA) session; the APIs they call check it too.
+  if (pathname.startsWith("/admin") && pathname !== "/admin/login") {
+    if (!verifyAdminSessionToken(request.cookies.get(ADMIN_SESSION_COOKIE)?.value)) {
+      return NextResponse.redirect(new URL("/admin/login", request.url))
+    }
+  }
 
   const response = NextResponse.next()
+  if (pathname.startsWith("/admin")) response.headers.set("X-Robots-Tag", "noindex, nofollow")
 
   const protocol = request.headers.get("x-forwarded-proto")
   if (protocol === "http" && process.env.NODE_ENV === "production") {
@@ -33,7 +43,7 @@ export function proxy(request: NextRequest) {
     return NextResponse.redirect(httpsUrl, 301)
   }
 
-  response.headers.set("X-Robots-Tag", "index, follow")
+  if (!pathname.startsWith("/admin")) response.headers.set("X-Robots-Tag", "index, follow")
   response.headers.set("X-DNS-Prefetch-Control", "on")
 
   response.headers.set("X-Frame-Options", "DENY")

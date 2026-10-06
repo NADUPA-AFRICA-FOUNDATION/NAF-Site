@@ -1,12 +1,16 @@
 import { type NextRequest, NextResponse } from "next/server"
+import { api } from "@/convex/_generated/api"
+import { getConvex, serverSecret } from "@/lib/convex-server"
 import {
-  ADMIN_SESSION_COOKIE,
-  ADMIN_SESSION_DURATION_SECONDS,
+  ADMIN_PENDING_COOKIE,
+  ADMIN_PENDING_DURATION_SECONDS,
   createAdminSessionToken,
   isAdminAuthConfigured,
   verifyAdminCredentials,
 } from "@/lib/admin-session"
 
+// Step 1 of sign-in: checks the password and issues a short-lived pending
+// cookie. A full session is only issued by /api/admin/2fa/verify.
 export async function POST(request: NextRequest) {
   try {
     if (!isAdminAuthConfigured()) {
@@ -26,19 +30,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Invalid email or password" }, { status: 401 })
     }
 
-    const token = createAdminSessionToken(email)
-    const response = NextResponse.json({
-      user: { email: email.trim().toLowerCase(), role: "admin" },
-    })
+    const normalizedEmail = email.trim().toLowerCase()
+    const totp = await getConvex().query(api.adminTotp.get, { secret: serverSecret(), email: normalizedEmail })
 
-    response.cookies.set(ADMIN_SESSION_COOKIE, token, {
+    const response = NextResponse.json({ next: totp?.enabled ? "verify" : "enroll" })
+    response.cookies.set(ADMIN_PENDING_COOKIE, createAdminSessionToken(normalizedEmail, "password"), {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      path: "/",
-      maxAge: ADMIN_SESSION_DURATION_SECONDS,
+      sameSite: "strict",
+      path: "/api/admin",
+      maxAge: ADMIN_PENDING_DURATION_SECONDS,
     })
-
     return response
   } catch (error) {
     console.error("Login error:", error)

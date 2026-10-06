@@ -3,15 +3,25 @@
 //   ADMIN_EMAIL          - email address allowed to sign in
 //   ADMIN_PASSWORD       - password for that account
 //   ADMIN_SESSION_SECRET - random secret used to sign session tokens (32+ chars)
+// Signing in takes two steps: password (pending cookie), then a TOTP or backup
+// code (full session cookie) - see app/api/admin/login and app/api/admin/2fa.
 // This module uses Node's crypto and must only be imported from server code
 // (API routes, server actions) - never from client components.
 import crypto from "crypto"
 
 export const ADMIN_SESSION_COOKIE = "nadupa_admin_session"
-export const ADMIN_SESSION_DURATION_SECONDS = 24 * 60 * 60 // 24 hours
+export const ADMIN_SESSION_DURATION_SECONDS = 12 * 60 * 60 // 12 hours
+
+// Issued after the password check; only lets the browser finish 2FA.
+export const ADMIN_PENDING_COOKIE = "nadupa_admin_pending"
+export const ADMIN_PENDING_DURATION_SECONDS = 10 * 60
+
+// "password": password verified, 2FA still required. "full": both verified.
+export type AdminSessionStage = "password" | "full"
 
 export interface AdminSession {
   email: string
+  stage: AdminSessionStage
   exp: number // unix seconds
 }
 
@@ -42,16 +52,21 @@ function sign(payload: string): string {
   return crypto.createHmac("sha256", secret).update(payload).digest("base64url")
 }
 
-export function createAdminSessionToken(email: string): string {
+export function createAdminSessionToken(email: string, stage: AdminSessionStage = "full"): string {
+  const duration = stage === "full" ? ADMIN_SESSION_DURATION_SECONDS : ADMIN_PENDING_DURATION_SECONDS
   const session: AdminSession = {
     email: email.trim().toLowerCase(),
-    exp: Math.floor(Date.now() / 1000) + ADMIN_SESSION_DURATION_SECONDS,
+    stage,
+    exp: Math.floor(Date.now() / 1000) + duration,
   }
   const payload = Buffer.from(JSON.stringify(session)).toString("base64url")
   return `${payload}.${sign(payload)}`
 }
 
-export function verifyAdminSessionToken(token: string | undefined | null): AdminSession | null {
+export function verifyAdminSessionToken(
+  token: string | undefined | null,
+  stage: AdminSessionStage = "full",
+): AdminSession | null {
   if (!token || !process.env.ADMIN_SESSION_SECRET) return null
 
   const [payload, signature] = token.split(".")
@@ -62,6 +77,7 @@ export function verifyAdminSessionToken(token: string | undefined | null): Admin
 
     const session = JSON.parse(Buffer.from(payload, "base64url").toString("utf8")) as AdminSession
     if (typeof session.email !== "string" || typeof session.exp !== "number") return null
+    if (session.stage !== stage) return null
     if (session.exp < Math.floor(Date.now() / 1000)) return null
 
     return session

@@ -37,8 +37,7 @@ export function DonationForm() {
           title: "Donation Interest Submitted",
           description: result.message,
         })
-        // Reset form
-        event.currentTarget.reset()
+        // The success view replaces the form, so only the controlled fields need clearing
         setDonationAmount("50")
         setShowCustomAmount(false)
         setPaymentMethod("creditCard")

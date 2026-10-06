@@ -1,10 +1,10 @@
 let resend: any = null
 
-try {
+if (process.env.RESEND_API_KEY) {
   const { Resend } = require("resend")
   resend = new Resend(process.env.RESEND_API_KEY)
-} catch (error) {
-  console.warn("Resend package not available. Email notifications will be disabled.")
+} else {
+  console.warn("RESEND_API_KEY is not set. Email notifications will be disabled.")
 }
 
 export interface EmailTemplate {
@@ -36,15 +36,19 @@ export class EmailService {
     }
 
     try {
-      const result = await resend.emails.send({
+      const { data, error } = await resend.emails.send({
         from: from || this.FROM_EMAIL,
         to,
         subject,
         html,
       })
 
-      console.log("Email sent successfully:", result)
-      return { success: true, data: result }
+      // Resend reports API failures (bad key, unverified domain, ...) in `error` rather than throwing
+      if (error) {
+        console.error("Email sending failed:", error)
+        return { success: false, error }
+      }
+      return { success: true, data }
     } catch (error) {
       console.error("Email sending failed:", error)
       return { success: false, error }
@@ -340,7 +344,7 @@ export class EmailService {
             
             <p><strong>Your Areas of Interest:</strong></p>
             <div class="interest-tags">
-              ${data.areaOfInterest.map((interest) => `<span class="tag">${interest}</span>`).join("")}
+              ${data.areaOfInterest.map((interest) => `<span class="tag">${escapeHtml(interest)}</span>`).join("")}
             </div>
             
             <p><strong>Next Steps:</strong></p>
@@ -447,14 +451,14 @@ export class EmailService {
             <div class="field">
               <div class="field-label">Areas of Interest:</div>
               <div class="tags">
-                ${data.areaOfInterest.map((interest) => `<span class="tag">${interest}</span>`).join("")}
+                ${data.areaOfInterest.map((interest) => `<span class="tag">${escapeHtml(interest)}</span>`).join("")}
               </div>
             </div>
             
             <div class="field">
               <div class="field-label">Availability:</div>
               <div class="tags">
-                ${data.availability.map((time) => `<span class="tag">${time}</span>`).join("")}
+                ${data.availability.map((time) => `<span class="tag">${escapeHtml(time)}</span>`).join("")}
               </div>
             </div>
             
