@@ -8,13 +8,19 @@
 //      emailed sign-in link (app/api/admin/email-link). This sets a short-lived
 //      pending cookie.
 //   2. Enter an authenticator or backup code (app/api/admin/2fa), which issues
-//      the full session cookie.
+//      the full session cookie - skipped on a device trusted within 30 days.
 // This module uses Node's crypto and must only be imported from server code
 // (API routes, server actions, proxy) - never from client components.
 import crypto from "crypto"
 
 export const ADMIN_SESSION_COOKIE = "nadupa_admin_session"
-export const ADMIN_SESSION_DURATION_SECONDS = 12 * 60 * 60 // 12 hours
+export const ADMIN_SESSION_DURATION_SECONDS = 7 * 24 * 60 * 60 // 7 days
+
+// Set when an admin ticks "Trust this device" after entering a 2FA code. On a
+// trusted browser, step 2 (the authenticator code) is skipped for 30 days;
+// step 1 (Google or email link) is still required.
+export const ADMIN_TRUSTED_COOKIE = "nadupa_admin_trusted"
+export const ADMIN_TRUSTED_DURATION_SECONDS = 30 * 24 * 60 * 60
 
 // Issued after step 1; only lets the browser finish 2FA.
 export const ADMIN_PENDING_COOKIE = "nadupa_admin_pending"

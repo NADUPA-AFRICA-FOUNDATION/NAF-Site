@@ -35,6 +35,7 @@ export default function AdminLoginPage() {
   const [googleEnabled, setGoogleEnabled] = useState(false)
   const [code, setCode] = useState("")
   const [useBackupCode, setUseBackupCode] = useState(false)
+  const [rememberDevice, setRememberDevice] = useState(true)
   const [enrollment, setEnrollment] = useState<{ qrCode: string; manualKey: string } | null>(null)
   const [backupCodes, setBackupCodes] = useState<string[]>([])
   const [loading, setLoading] = useState(false)
@@ -125,7 +126,7 @@ export default function AdminLoginPage() {
     setError(null)
     setLoading(true)
     try {
-      const result = await post("/api/admin/2fa/verify", { code })
+      const result = await post("/api/admin/2fa/verify", { code, rememberDevice })
       setCode("")
       if (result.backupCodes) {
         setBackupCodes(result.backupCodes)
@@ -169,6 +170,18 @@ export default function AdminLoginPage() {
         label
       )}
     </Button>
+  )
+
+  const rememberCheckbox = (
+    <label className="flex items-center gap-2 text-sm text-stone-600">
+      <input
+        type="checkbox"
+        checked={rememberDevice}
+        onChange={(e) => setRememberDevice(e.target.checked)}
+        className="h-4 w-4 accent-emerald-600"
+      />
+      Trust this device for 30 days (skip this code next time)
+    </label>
   )
 
   const codeInput = (
@@ -258,8 +271,8 @@ export default function AdminLoginPage() {
             <div className="space-y-4 text-center">
               <MailCheck className="mx-auto h-10 w-10 text-emerald-600" />
               <p className="text-sm text-stone-600">
-                If <strong>{email}</strong> is an admin address, a sign-in link is on its way. It expires in 15
-                minutes. Open it on this device to continue.
+                A sign-in link has been sent to <strong>{email}</strong>. It expires in 15 minutes. Open it on this
+                device to continue.
               </p>
               <button
                 type="button"
@@ -283,6 +296,7 @@ export default function AdminLoginPage() {
                   : "Open your authenticator app and enter the 6-digit code for NADUPA Admin."}
               </p>
               {codeInput}
+              {rememberCheckbox}
               {errorBox}
               {submitButton("Verify", "Verifying...")}
               <button
@@ -315,6 +329,7 @@ export default function AdminLoginPage() {
                 <code className="block mt-1 font-mono text-sm text-stone-800 break-all">{enrollment.manualKey}</code>
               </div>
               {codeInput}
+              {rememberCheckbox}
               {errorBox}
               {submitButton("Turn On Two-Factor", "Verifying...")}
             </form>
