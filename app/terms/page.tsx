@@ -1,5 +1,8 @@
 import type { Metadata } from "next"
-import TermsClientPage from "./TermsClientPage"
+import { LegalPage } from "@/components/legal-page"
+import { getContent } from "@/lib/cms/content"
+
+export const revalidate = 3600
 
 export const metadata: Metadata = {
   title: "Terms and Conditions | NADUPA AFRICA FOUNDATION",
@@ -8,6 +11,6 @@ export const metadata: Metadata = {
   keywords: "terms, conditions, legal, volunteer, donation, Kenya, NGO, NADUPA",
 }
 
-export default function TermsPage() {
-  return <TermsClientPage />
+export default async function TermsPage() {
+  return <LegalPage content={await getContent("terms")} />
 }

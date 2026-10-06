@@ -66,7 +66,7 @@ const nextConfig = {
               "frame-ancestors 'none'",
               "base-uri 'self'",
               "form-action 'self'",
-              "frame-src 'none'",
+              "frame-src https://www.google.com",
               "object-src 'none'"
             ].join('; ')
           }
