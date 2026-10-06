@@ -12,11 +12,7 @@ jobs:
 
     env:
       # Placeholder values so the build can run; real values live in Vercel.
-      NEXT_PUBLIC_SUPABASE_URL: https://ci-placeholder.supabase.co
-      NEXT_PUBLIC_SUPABASE_ANON_KEY: ci-placeholder-anon-key
-      SUPABASE_SERVICE_ROLE_KEY: ci-placeholder-service-key
-      ADMIN_EMAIL: ci@example.org
-      ADMIN_PASSWORD: ci-placeholder-password
+      ADMIN_EMAILS: ci@example.org
       ADMIN_SESSION_SECRET: ci-placeholder-session-secret-0123456789abcdef
 
     steps:

@@ -79,7 +79,7 @@ function isSafeUrl(value: string): boolean {
   }
 }
 
-// Images must come from the site or its upload storage; the Content-Security-Policy
+// Images must come from the site or Convex file storage; the Content-Security-Policy
 // in next.config.mjs blocks images from anywhere else.
 function isAllowedImage(value: string): boolean {
   if (value === "" || (value.startsWith("/") && !value.startsWith("//"))) return true
@@ -87,9 +87,8 @@ function isAllowedImage(value: string): boolean {
     const url = new URL(value)
     return (
       url.protocol === "https:" &&
-      (url.hostname === "blob.vercel-storage.com" ||
-        url.hostname.endsWith(".public.blob.vercel-storage.com") ||
-        url.hostname.endsWith(".supabase.co"))
+      url.hostname.endsWith(".convex.cloud") &&
+      url.pathname.startsWith("/api/storage/")
     )
   } catch {
     return false

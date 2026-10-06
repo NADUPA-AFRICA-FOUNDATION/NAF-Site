@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useToast } from "@/hooks/use-toast"
+import { uploadToConvex } from "@/lib/upload-client"
 import { ICON_NAMES, getIcon } from "@/lib/cms/icons"
 import { getPath, setPath } from "@/lib/cms/registry"
 import type { Field } from "@/lib/cms/types"
@@ -48,9 +49,12 @@ function ImageInput({ id, value, onChange }: { id: string; value: string; onChan
   const upload = async (file: File) => {
     setUploading(true)
     try {
-      const body = new FormData()
-      body.append("file", file)
-      const response = await fetch("/api/admin/content/upload", { method: "POST", body })
+      const storageId = await uploadToConvex(file)
+      const response = await fetch("/api/admin/content/upload", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ storageId }),
+      })
       const result = await response.json()
       if (!response.ok) throw new Error(result.error || "Upload failed")
       onChange(result.url)

@@ -9,6 +9,8 @@
  */
 
 import type * as adminTotp from "../adminTotp.js";
+import type * as documents from "../documents.js";
+import type * as files from "../files.js";
 import type * as rateLimits from "../rateLimits.js";
 import type * as serverAuth from "../serverAuth.js";
 import type * as siteContent from "../siteContent.js";
@@ -22,6 +24,8 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   adminTotp: typeof adminTotp;
+  documents: typeof documents;
+  files: typeof files;
   rateLimits: typeof rateLimits;
   serverAuth: typeof serverAuth;
   siteContent: typeof siteContent;

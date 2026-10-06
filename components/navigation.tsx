@@ -31,6 +31,7 @@ export function Navigation() {
                 alt="NADUPA AFRICA FOUNDATION Logo"
                 fill
                 className="object-contain object-left"
+                sizes="96px"
                 priority
               />
             </div>

@@ -36,6 +36,18 @@ export default defineSchema({
     status: submissionStatus,
   }).index("by_status", ["status"]),
 
+  // Public document library (Resources and Transparency pages). Files live in
+  // Convex file storage.
+  documents: defineTable({
+    title: v.string(),
+    description: v.string(),
+    category: v.string(),
+    storageId: v.id("_storage"),
+    fileName: v.string(),
+    fileSize: v.number(),
+    isFeatured: v.boolean(),
+  }).index("by_featured", ["isFeatured"]),
+
   // Editable public-site content (one row per page, see lib/cms)
   siteContent: defineTable({
     key: v.string(),

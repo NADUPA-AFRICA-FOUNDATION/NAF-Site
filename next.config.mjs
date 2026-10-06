@@ -1,22 +1,22 @@
 const isDev = process.env.NODE_ENV !== 'production'
 
-// Hosts that serve uploaded images and documents
-const storageHosts = 'https://*.supabase.co https://blob.vercel-storage.com https://*.public.blob.vercel-storage.com'
+// Convex: database API and file storage (uploaded documents and images)
+const storageHosts = 'https://*.convex.cloud'
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Serve every image resized for the visitor's screen (up to 4K / Retina) as
+  // AVIF or WebP at high quality, instead of sending the multi-MB originals.
   images: {
-    unoptimized: true,
+    formats: ['image/avif', 'image/webp'],
+    qualities: [90],
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 2560, 3840],
+    minimumCacheTTL: 2678400, // 31 days
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: 'blob.vercel-storage.com',
-        pathname: '/**',
-      },
-      {
-        protocol: 'https',
-        hostname: '*.supabase.co',
-        pathname: '/**',
+        hostname: '*.convex.cloud',
+        pathname: '/api/storage/**',
       },
     ],
   },

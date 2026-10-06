@@ -62,7 +62,9 @@ export const config = {
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
+     * - images/ and other static files in public/ (the image optimizer
+     *   fetches these internally; they never need the proxy)
      */
-    "/((?!_next/static|_next/image|favicon.ico).*)",
+    "/((?!_next/static|_next/image|favicon.ico|images/|.*\\.(?:png|jpe?g|gif|webp|avif|svg|ico|txt|xml)$).*)",
   ],
 }

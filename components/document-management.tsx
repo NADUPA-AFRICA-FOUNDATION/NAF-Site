@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge"
 import { Upload, FileText, Trash2, Download, Eye, RefreshCw } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
+import { uploadToConvex } from "@/lib/upload-client"
 
 interface Document {
   id: string
@@ -118,10 +119,10 @@ export default function DocumentManagement() {
       return
     }
 
-    if (file.size > 10 * 1024 * 1024) {
+    if (file.size > 25 * 1024 * 1024) {
       toast({
         title: "File too large",
-        description: "Please upload a file smaller than 10MB.",
+        description: "Please upload a file smaller than 25MB.",
         variant: "destructive",
       })
       return
@@ -130,28 +131,12 @@ export default function DocumentManagement() {
     setUploading(true)
 
     try {
-      // Upload file to Vercel Blob
-      const uploadFormData = new FormData()
-      uploadFormData.append("file", file)
-
-      const uploadResponse = await fetch("/api/upload", {
-        method: "POST",
-        body: uploadFormData,
-      })
-
-      if (!uploadResponse.ok) {
-        const errorData = await uploadResponse.json()
-        throw new Error(errorData.error || "Upload failed")
-      }
-
-      const { url } = await uploadResponse.json()
-
-      // Save document metadata to database
+      // Upload the PDF straight to Convex storage, then save its details
+      const storageId = await uploadToConvex(file)
       const documentData = {
         ...formData,
-        file_url: url,
-        file_size: `${(file.size / 1024 / 1024).toFixed(1)} MB`,
-        file_type: "PDF",
+        storage_id: storageId,
+        file_name: file.name,
       }
 
       const saveResponse = await fetch("/api/documents", {

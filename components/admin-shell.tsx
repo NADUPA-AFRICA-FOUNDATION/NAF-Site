@@ -78,6 +78,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
                   alt="NADUPA AFRICA FOUNDATION"
                   fill
                   className="object-contain object-left"
+                  sizes="96px"
                   priority
                 />
               </div>
